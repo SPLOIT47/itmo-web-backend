@@ -56,10 +56,11 @@ services:
       - kafka-data:/var/lib/kafka/data
     networks: [web]
     healthcheck:
-      test: ["CMD-SHELL", "bash -lc 'nc -z localhost 9092'"]
+      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:9092 >/dev/null 2>&1" ]
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 30
+      start_period: 60s
     mem_limit: 1500m
     cpus: "2.0"
 
