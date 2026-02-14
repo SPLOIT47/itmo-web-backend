@@ -34,7 +34,7 @@ export class AuthController {
 
     @Post('register')
     @HttpCode(HttpStatus.CREATED)
-    @ApiOperation({ summary: 'Register new user (test desc)' })
+    @ApiOperation({ summary: 'Register new user' })
     @ApiResponse({ status: 201, type: AuthResponse })
     async register(@Body() request: RegisterRequest, @Res({passthrough: true}) res: express.Response): Promise<AuthResponse> {
         const out = await this.authService.register(request);
