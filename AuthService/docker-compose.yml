@@ -1,0 +1,19 @@
+name: auth
+
+networks:
+  web:
+    external: true
+
+services:
+  auth-service:
+    build:
+      context: .
+    image: auth-service:local
+    env_file:
+      - .env
+    ports:
+      - "3001:3000"
+    command: sh -c "npx prisma migrate deploy && npm run start:prod"
+    networks: [web]
+    mem_limit: 350m
+    cpus: "1.0"

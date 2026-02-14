@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url = env("DATABASE_URL")
+}
+
+enum OutboxStatus {
+    NEW
+    SENT
+    FAILED
+}
+
+enum OutboxEventType {
+    USER_REGISTERED
+    USER_CREDENTIALS_UPDATED
+}
+
+model User {
+    userId String @id @default(uuid())
+    email String @unique
+    login String @unique
+    passwordHash String
+    createdAt DateTime @default(now())
+    refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+    refreshTokenId String @id @default(uuid())
+    userId String
+    tokenHash String
+    expiresAt DateTime
+    revokedAt DateTime?
+
+    user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([userId, tokenHash])
+    @@index([userId, revokedAt])
+}
+
+model OutboxEvent {
+    outboxEventId String @id @default(uuid())
+    eventType OutboxEventType
+    payload Json
+    status OutboxStatus @default(NEW)
+    createdAt DateTime @default(now())
+    sentAt DateTime?
+    attempts Int @default(0)
+    lastError String?
+
+    @@index([status, createdAt])
+}
