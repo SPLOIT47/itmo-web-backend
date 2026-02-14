@@ -103,10 +103,11 @@ export class AuthController {
 
     private setRefreshCookie(res: express.Response, refreshToken: string) {
         const ttl = this.config.get("REFRESH_TOKEN_TTL")! as StringValue;
+        const secure = this.config.get('COOKIE_SECURE') === 'true';
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: this.config.get<string>("NODE_ENV") === "production",
+            secure: secure,
             sameSite: "lax",
             path: "/auth",
             maxAge: ms(ttl)
