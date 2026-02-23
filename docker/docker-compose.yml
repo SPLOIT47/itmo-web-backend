@@ -34,9 +34,6 @@ services:
     image: confluentinc/cp-kafka:7.8.0
     container_name: kafka
     hostname: kafka
-    ports:
-      - "9092:9092"
-      - "9093:9093"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_BROKER_ID: 1
