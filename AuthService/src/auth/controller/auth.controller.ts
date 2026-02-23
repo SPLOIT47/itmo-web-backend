@@ -1,6 +1,6 @@
 import {
     Body,
-    Controller,
+    Controller, Get,
     HttpCode,
     HttpStatus,
     Post,
@@ -24,13 +24,13 @@ import {AuthResponse} from "../payload/response/auth.response";
 import {RefreshResponse} from "../payload/response/refreshResponse";
 import ms, {StringValue} from "ms";
 import {ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {MeResponse} from "../payload/response/me.response";
 
 @ApiTags("Auth")
 @Controller('auth')
 export class AuthController {
 
-    constructor(private readonly authService: AuthService, private readonly config: ConfigService) {
-    }
+    constructor(private readonly authService: AuthService, private readonly config: ConfigService) {}
 
     @Post('register')
     @HttpCode(HttpStatus.CREATED)
@@ -99,6 +99,13 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     async update(@Principal() principal: JwtPayload, @Body() request: UpdateCredentialsRequest): Promise<UserPayload> {
         return this.authService.updateCredentials(principal.sub, request);
+    }
+
+    @Get('me')
+    @UseGuards(AuthGuard('jwt'))
+    @HttpCode(HttpStatus.OK)
+    async getMe(@Principal() principal: JwtPayload): Promise<MeResponse> {
+        return this.authService.getCurrent(principal.sub);
     }
 
     private setRefreshCookie(res: express.Response, refreshToken: string) {

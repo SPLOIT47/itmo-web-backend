@@ -23,6 +23,7 @@ import {OutboxEventType, RefreshToken} from "@prisma/client";
 import {UserPayload} from "../payload/UserPayload";
 import ms, {StringValue} from "ms";
 import {AuthResult} from "../model/AuthResult";
+import {MeResponse} from "../payload/response/me.response";
 
 @Injectable()
 export class AuthService {
@@ -249,6 +250,16 @@ export class AuthService {
 
             return userPayload;
         });
+    }
+
+    async getCurrent(userId: string): Promise<MeResponse> {
+        const user = await this.userRepository.findById(this.txService.db(), userId);
+        if (!user) throw new NotFoundException("User not found");
+        return {
+            userId: user.userId,
+            login: user.login,
+            email: user.email,
+        };
     }
 
     private createTokens(payload: JwtPayload): TokensWithMeta {
