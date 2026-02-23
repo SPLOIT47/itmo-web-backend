@@ -23,7 +23,7 @@ import {ConfigService} from "@nestjs/config";
 import {AuthResponse} from "../payload/response/auth.response";
 import {RefreshResponse} from "../payload/response/refreshResponse";
 import ms, {StringValue} from "ms";
-import {ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {ApiBearerAuth, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {MeResponse} from "../payload/response/me.response";
 
 @ApiTags("Auth")
@@ -87,6 +87,7 @@ export class AuthController {
     }
 
     @Post('logoutAll')
+    @ApiBearerAuth('bearer')
     @UseGuards(AuthGuard('jwt'))
     @HttpCode(HttpStatus.OK)
     async logoutAll(@Principal() principal: JwtPayload, @Res({passthrough: true}) res: express.Response): Promise<void> {
@@ -95,6 +96,7 @@ export class AuthController {
     }
 
     @Put('update')
+    @ApiBearerAuth('bearer')
     @UseGuards(AuthGuard('jwt'))
     @HttpCode(HttpStatus.OK)
     async update(@Principal() principal: JwtPayload, @Body() request: UpdateCredentialsRequest): Promise<UserPayload> {
@@ -102,6 +104,7 @@ export class AuthController {
     }
 
     @Get('me')
+    @ApiBearerAuth('bearer')
     @UseGuards(AuthGuard('jwt'))
     @HttpCode(HttpStatus.OK)
     async getMe(@Principal() principal: JwtPayload): Promise<MeResponse> {
