@@ -40,13 +40,12 @@ export class AuthService {
     async register(payload: RegisterRequest) : Promise<AuthResult> {
 
         return this.txService.run(async db => {
-           const exists =
-               await this.userRepository.findByLogin(db, payload.login) != null ||
-               await this.userRepository.findByEmail(db, payload.email) != null;
+            const loginExists = (await this.userRepository.findByLogin(db, payload.login)) != null;
+            const emailExists = (await this.userRepository.findByEmail(db, payload.email)) != null;
 
-           if (exists) {
-               throw new ConflictException("User already exists");
-           }
+            if (loginExists || emailExists) {
+                throw new ConflictException("User already exists");
+            }
 
            const userEntity = {
                login: payload.login,
@@ -63,7 +62,19 @@ export class AuthService {
                createdAt: user.createdAt,
            };
 
-           await this.outboxRepository.create(db, OutboxEventType.USER_REGISTERED, userPayload);
+            const eventPayload = {
+                userId: user.userId,
+                login: user.login,
+                email: user.email,
+                createdAt: user.createdAt,
+                profile: {
+                    name: payload.name,
+                    surname: payload.surname,
+                },
+                version: user.version,
+            };
+
+           await this.outboxRepository.create(db, OutboxEventType.USER_REGISTERED, eventPayload);
 
            const jwtPayload: JwtPayload = {
                sub: user.userId,
@@ -200,13 +211,17 @@ export class AuthService {
             const user = await this.userRepository.findById(db, userId);
             if (!user) throw new UnauthorizedException();
 
-            if (payload.login && payload.login !== user.login) {
-                const exists = await this.userRepository.findByLogin(db, payload.login);
+            const loginChanged = Boolean(payload.login && payload.login !== user.login);
+            const emailChanged = Boolean(payload.email && payload.email !== user.email);
+            const identityChanged = loginChanged || emailChanged;
+
+            if (loginChanged) {
+                const exists = await this.userRepository.findByLogin(db, payload.login!);
                 if (exists) throw new ConflictException("login already in use");
             }
 
-            if (payload.email && payload.email !== user.email) {
-                const exists = await this.userRepository.findByEmail(db, payload.email);
+            if (emailChanged) {
+                const exists = await this.userRepository.findByEmail(db, payload.email!);
                 if (exists) throw new ConflictException("email already in use");
             }
 
@@ -227,6 +242,7 @@ export class AuthService {
                 ...(payload.login ? { login: payload.login } : {}),
                 ...(payload.email ? { email: payload.email } : {}),
                 ...(newPasswordHash ? { passwordHash: newPasswordHash } : {}),
+                ...(identityChanged ? { version: { increment: 1 } } : { })
             });
 
             if (newPasswordHash) {
@@ -244,8 +260,20 @@ export class AuthService {
                 createdAt: updated.createdAt,
             };
 
-            if (payload.login || payload.email) {
-                await this.outboxRepository.create(db, OutboxEventType.USER_CREDENTIALS_UPDATED, userPayload)
+            if (identityChanged) {
+                const event = {
+                    userId: updated.userId,
+                    login: updated.login,
+                    email: updated.email,
+                    createdAt: updated.createdAt,
+                    version: updated.version,
+                    changed: [
+                        ...(loginChanged ? ["login"] : []),
+                        ...(emailChanged ? ["email"] : []),
+                    ],
+                }
+
+                await this.outboxRepository.create(db, OutboxEventType.USER_CREDENTIALS_UPDATED, event)
             }
 
             return userPayload;
