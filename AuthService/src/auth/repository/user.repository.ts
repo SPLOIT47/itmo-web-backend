@@ -21,7 +21,7 @@ export class UserRepository {
        return db.user.create({data: entity});
     }
 
-    async update(db: Db, userId: string, entity: Partial<User>): Promise<User> {
+    async update(db: Db, userId: string, entity: Prisma.UserUpdateInput): Promise<User> {
         return db.user.update({
             where: {userId},
             data: entity,
