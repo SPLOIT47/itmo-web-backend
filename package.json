@@ -4,6 +4,7 @@
   "workspaces": [
     "AuthService",
     "ProfileService",
+    "ContentService",
     "packages/*"
   ],
   "scripts": {
