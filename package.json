@@ -1,0 +1,13 @@
+{
+  "name": "web",
+  "private": true,
+  "workspaces": [
+    "AuthService",
+    "ProfileService",
+    "ContentService",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:contracts": "npm run build -w @app/contracts"
+  }
+}
