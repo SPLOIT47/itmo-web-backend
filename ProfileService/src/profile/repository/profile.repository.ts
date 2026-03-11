@@ -95,20 +95,6 @@ export class ProfileRepository {
         return { rows, hasMore, nextOffset };
     }
 
-    async getOrCreate(id: string, tx: any = db) {
-        await tx
-            .insert(profiles)
-            .values({
-                userId: id,
-                login: null,
-                name: "",
-                surname: "",
-            })
-            .onConflictDoNothing({ target: profiles.userId });
-
-        return this.findById(id, tx);
-    }
-
     async getIdentityVersion(userId: string, tx: any = db) {
         const rows = await tx
             .select({ v: profiles.identityVersion  })

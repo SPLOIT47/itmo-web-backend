@@ -35,14 +35,6 @@ export class ProfileService {
         };
     }
 
-    async create(entity: typeof profiles.$inferInsert): Promise<ProfileResponse> {
-        return toProfileResponse(await this.repository.create(entity));
-    }
-
-    async updateProfile(id:string, req: UpdateProfileRequest): Promise<ProfileResponse> {
-        return toProfileResponse(await this.repository.update(id, req));
-    }
-
     async batch(req: BatchProfilesRequest): Promise<BatchProfilesResponse> {
         const result = await this.repository.batch(req.ids);
         const map = new Map(result.map(e => [e.userId, e]));
