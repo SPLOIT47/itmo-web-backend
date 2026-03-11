@@ -1,0 +1,20 @@
+name: profile
+
+networks:
+  web:
+    external: true
+
+services:
+  profile-service:
+    build:
+      context: ../
+      dockerfile: ProfileService/Dockerfile
+    image: profile-service:local
+    env_file:
+      - .env
+    ports:
+      - "3002:3002"
+    networks:
+      - web
+    mem_limit: 350m
+    cpus: "1.0"
