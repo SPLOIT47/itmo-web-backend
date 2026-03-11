@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./kafka/auth": "./dist/kafka/auth.js"
+    "./kafka/auth": "./dist/kafka/auth.js",
+    "./kafka/content": "./dist/kafka/content.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"

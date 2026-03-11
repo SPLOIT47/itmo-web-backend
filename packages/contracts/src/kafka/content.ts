@@ -27,8 +27,8 @@ export type PostCreatedPayload = {
 export type PostUpdatedPayload = {
     postId: string;
     authorId: string;
-    text: string | undefined;
-    media: string[] | undefined;
+    text?: string;
+    media?: string[];
     updatedAt: string;
     version: number;
     changed: string[];
