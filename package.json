@@ -5,6 +5,8 @@
     "AuthService",
     "ProfileService",
     "ContentService",
+    "MediaService",
+    "SocialService",
     "packages/*"
   ],
   "scripts": {
