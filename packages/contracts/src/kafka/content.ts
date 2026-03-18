@@ -116,3 +116,15 @@ export type ContentEvent =
     | CommentCreatedEvent
     | CommentDeletedEvent;
 
+export function isPostCreatedEvent(e: ContentEvent): e is PostCreatedEvent {
+    return e.eventType === ContentEventType.POST_CREATED;
+}
+
+export function isPostUpdatedEvent(e: ContentEvent): e is PostUpdatedEvent {
+    return e.eventType === ContentEventType.POST_UPDATED;
+}
+
+export function isPostDeletedEvent(e: ContentEvent): e is PostDeletedEvent {
+    return e.eventType === ContentEventType.POST_DELETED;
+}
+
