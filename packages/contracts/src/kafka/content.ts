@@ -15,9 +15,19 @@ export type ContentEventEnvelope<TType extends ContentEventType, TPayload> = {
     createdAt: string;
 };
 
+/** Кто «владелец» поста в смысле ленты: пользователь или сообщество (будущие посты от имени группы). */
+export type PostAuthorKind = "user" | "community";
+
 export type PostCreatedPayload = {
     postId: string;
     authorId: string;
+    /** По умолчанию считаем личным постом пользователя (совместимо со старыми событиями без поля). */
+    postAuthorKind?: PostAuthorKind;
+    /**
+     * Для поста от имени сообщества: id пользователя, который нажал «опубликовать».
+     * Нужен Feed’у, чтобы положить пост в ленту автора, даже если в feed_sources ещё нет подписчиков на сообщество.
+     */
+    postedByUserId?: string;
     text: string;
     media: string[];
     createdAt: string;

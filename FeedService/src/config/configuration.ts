@@ -5,7 +5,10 @@ export type FeedServiceConfig = {
     kafkaGroupId: string;
     contentTopic: string;
     socialTopic: string;
+    kafkaSubscribeFromBeginning: boolean;
     feedMaxSize: number;
+    contentServiceUrl: string;
+    socialServiceUrl: string;
 };
 
 export default (): FeedServiceConfig => {
@@ -22,9 +25,16 @@ export default (): FeedServiceConfig => {
         kafkaGroupId: process.env.KAFKA_GROUP_ID ?? "feed-service",
         contentTopic: process.env.KAFKA_CONTENT_TOPIC ?? "content.topic",
         socialTopic: process.env.KAFKA_SOCIAL_TOPIC ?? "social.topic",
+        kafkaSubscribeFromBeginning:
+            (process.env.KAFKA_SUBSCRIBE_FROM_BEGINNING ?? "true")
+                .toLowerCase() === "true",
         feedMaxSize: process.env.FEED_MAX_SIZE
             ? Number(process.env.FEED_MAX_SIZE)
             : 500,
+        contentServiceUrl:
+            process.env.CONTENT_SERVICE_URL ?? "http://localhost:3003",
+        socialServiceUrl:
+            process.env.SOCIAL_SERVICE_URL ?? "http://localhost:3004",
     };
 };
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Id } from '../../common/annotation/id.annotation';
 import { CreateCommunityDto } from '../payload/create-community.dto';
@@ -63,6 +63,17 @@ export class CommunityController {
   @ApiOperation({ summary: 'List members' })
   members(@Param('id') id: string) {
     return this.service.members(id);
+  }
+
+  @Delete('me/members')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteMyCommunityMemberships(@Id() userId: string): Promise<void> {
+    const communities = await this.service.my(userId);
+
+    for (const c of communities) {
+      // community_id is primary key in db schema
+      await this.service.leave(userId, c.communityId);
+    }
   }
 }
 

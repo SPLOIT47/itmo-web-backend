@@ -1,0 +1,21 @@
+name: media
+
+networks:
+  web:
+    external: true
+
+services:
+  media-service:
+    build:
+      context: ..
+      dockerfile: MediaService/Dockerfile
+    image: media-service:local
+    env_file:
+      - .env
+    ports:
+      - "3005:3000"
+    networks:
+      - web
+    mem_limit: 350m
+    cpus: "1.0"
+    restart: on-failure

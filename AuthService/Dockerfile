@@ -2,7 +2,7 @@ FROM node:20-alpine as builder
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --fetch-retries=10 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
 COPY . .
 RUN npx prisma generate
@@ -12,7 +12,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --fetch-retries=10 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma

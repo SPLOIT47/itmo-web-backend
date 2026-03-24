@@ -1,0 +1,21 @@
+name: social
+
+networks:
+  web:
+    external: true
+
+services:
+  social-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: social-service:local
+    env_file:
+      - .env
+    ports:
+      - "3004:3000"
+    networks:
+      - web
+    mem_limit: 350m
+    cpus: "1.0"
+    restart: on-failure

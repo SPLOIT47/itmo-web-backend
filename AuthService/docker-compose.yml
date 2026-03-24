@@ -14,6 +14,8 @@ services:
     ports:
       - "3001:3000"
     command: sh -c "npx prisma migrate deploy && npm run start:prod"
-    networks: [web]
+    networks:
+      - web
     mem_limit: 350m
     cpus: "1.0"
+    restart: on-failure

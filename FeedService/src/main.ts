@@ -33,6 +33,9 @@ async function bootstrap() {
         options: {
             client: { brokers: cfg.kafkaBrokers },
             consumer: { groupId: cfg.kafkaGroupId },
+            subscribe: {
+                fromBeginning: cfg.kafkaSubscribeFromBeginning,
+            },
         },
     });
 

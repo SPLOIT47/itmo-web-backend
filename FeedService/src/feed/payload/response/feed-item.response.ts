@@ -1,8 +1,16 @@
+export type FeedCommentDto = {
+    id: string;
+    authorId: string;
+    text: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
 export type FeedItemPayload = {
     text: string | undefined;
     media: string[] | undefined;
-    likeCount?: number;
-    commentCount?: number;
+    likes: string[];
+    comments: FeedCommentDto[];
 };
 
 export class FeedItemResponseDto {

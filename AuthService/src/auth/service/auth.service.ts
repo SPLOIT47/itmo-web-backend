@@ -280,6 +280,17 @@ export class AuthService {
         });
     }
 
+    async deleteAccount(userId: string): Promise<void> {
+        await this.txService.run(async db => {
+            await this.refreshTokenRepository.revokeAllByUserId(db, userId);
+
+            const deleted = await this.userRepository.delete(db, userId);
+            if (!deleted) {
+                throw new NotFoundException("User not found");
+            }
+        });
+    }
+
     async getCurrent(userId: string): Promise<MeResponse> {
         const user = await this.userRepository.findById(this.txService.db(), userId);
         if (!user) throw new NotFoundException("User not found");
@@ -288,6 +299,24 @@ export class AuthService {
             login: user.login,
             email: user.email,
         };
+    }
+
+    async getPublicLoginsByIds(
+        ids: string[],
+    ): Promise<{ users: { userId: string; login: string }[] }> {
+        const uniq = [...new Set(ids)].filter(Boolean).slice(0, 100);
+        if (uniq.length === 0) {
+            return { users: [] };
+        }
+        return this.txService.run(async (db) => {
+            const rows = await this.userRepository.findLoginsByIds(db, uniq);
+            return {
+                users: rows.map((r) => ({
+                    userId: r.userId,
+                    login: r.login,
+                })),
+            };
+        });
     }
 
     private createTokens(payload: JwtPayload): TokensWithMeta {

@@ -9,6 +9,18 @@ export class UserRepository {
         return db.user.findUnique({where: {userId}});
     }
 
+    async findLoginsByIds(
+        db: Db,
+        userIds: string[],
+    ): Promise<{ userId: string; login: string }[]> {
+        if (userIds.length === 0) return [];
+        const rows = await db.user.findMany({
+            where: { userId: { in: userIds } },
+            select: { userId: true, login: true },
+        });
+        return rows;
+    }
+
     async findByLogin(db: Db, login: string): Promise<User | null> {
         return db.user.findUnique({where: {login}});
     }

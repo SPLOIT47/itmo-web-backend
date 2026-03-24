@@ -1,6 +1,8 @@
 import {
     Body,
-    Controller, Get,
+    Controller,
+    Delete,
+    Get,
     HttpCode,
     HttpStatus,
     Post,
@@ -8,23 +10,23 @@ import {
     Req,
     Res,
     UnauthorizedException,
-    UseGuards
+    UseGuards,
 } from "@nestjs/common";
-import {AuthService} from "../service/auth.service";
-import {RegisterRequest} from "../payload/request/register.request";
-import {LoginRequest} from "../payload/request/login.request";
-import {UpdateCredentialsRequest} from "../payload/request/update.request";
-import {UserPayload} from "../payload/UserPayload";
-import {AuthGuard} from "@nestjs/passport";
-import type {JwtPayload} from "../payload/JwtPayload";
-import {Principal} from "../annotation/principal.annotation";
+import { AuthService } from "../service/auth.service";
+import { RegisterRequest } from "../payload/request/register.request";
+import { LoginRequest } from "../payload/request/login.request";
+import { UpdateCredentialsRequest } from "../payload/request/update.request";
+import { UserPayload } from "../payload/UserPayload";
+import { Id } from "../annotation/id.annotation";
 import express from "express";
-import {ConfigService} from "@nestjs/config";
-import {AuthResponse} from "../payload/response/auth.response";
-import {RefreshResponse} from "../payload/response/refreshResponse";
-import ms, {StringValue} from "ms";
-import {ApiBearerAuth, ApiOperation, ApiResponse, ApiTags} from "@nestjs/swagger";
-import {MeResponse} from "../payload/response/me.response";
+import { ConfigService } from "@nestjs/config";
+import { AuthResponse } from "../payload/response/auth.response";
+import { RefreshResponse } from "../payload/response/refreshResponse";
+import ms, { StringValue } from "ms";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { MeResponse } from "../payload/response/me.response";
+import { GatewaySecretGuard } from "../gateway/gateway-secret.guard";
+import { PublicBatchUserIdsRequest } from "../payload/request/public-batch-users.request";
 
 @ApiTags("Auth")
 @Controller('auth')
@@ -87,28 +89,42 @@ export class AuthController {
     }
 
     @Post('logoutAll')
-    @ApiBearerAuth('bearer')
-    @UseGuards(AuthGuard('jwt'))
     @HttpCode(HttpStatus.OK)
-    async logoutAll(@Principal() principal: JwtPayload, @Res({passthrough: true}) res: express.Response): Promise<void> {
-        await this.authService.logoutAll(principal.sub);
+    async logoutAll(@Id() userId: string, @Res({ passthrough: true }) res: express.Response): Promise<void> {
+        await this.authService.logoutAll(userId);
         this.clearRefreshCookie(res);
     }
 
     @Put('update')
-    @ApiBearerAuth('bearer')
-    @UseGuards(AuthGuard('jwt'))
     @HttpCode(HttpStatus.OK)
-    async update(@Principal() principal: JwtPayload, @Body() request: UpdateCredentialsRequest): Promise<UserPayload> {
-        return this.authService.updateCredentials(principal.sub, request);
+    async update(@Id() userId: string, @Body() request: UpdateCredentialsRequest): Promise<UserPayload> {
+        return this.authService.updateCredentials(userId, request);
     }
 
     @Get('me')
-    @ApiBearerAuth('bearer')
-    @UseGuards(AuthGuard('jwt'))
     @HttpCode(HttpStatus.OK)
-    async getMe(@Principal() principal: JwtPayload): Promise<MeResponse> {
-        return this.authService.getCurrent(principal.sub);
+    async getMe(@Id() userId: string): Promise<MeResponse> {
+        return this.authService.getCurrent(userId);
+    }
+
+    @Post('users/public-batch')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(GatewaySecretGuard)
+    @ApiOperation({
+        summary:
+            "Resolve public logins by user ids (Gateway BFF only; requires X-Gateway-Secret)",
+    })
+    async publicBatch(
+        @Body() body: PublicBatchUserIdsRequest,
+    ): Promise<{ users: { userId: string; login: string }[] }> {
+        return this.authService.getPublicLoginsByIds(body.ids);
+    }
+
+    @Delete('me')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteMe(@Id() userId: string, @Res({ passthrough: true }) res: express.Response): Promise<void> {
+        await this.authService.deleteAccount(userId);
+        this.clearRefreshCookie(res);
     }
 
     private setRefreshCookie(res: express.Response, refreshToken: string) {
@@ -119,12 +135,12 @@ export class AuthController {
             httpOnly: true,
             secure: secure,
             sameSite: "lax",
-            path: "/auth",
+            path: "/",
             maxAge: ms(ttl)
         })
     }
 
     private clearRefreshCookie(res: express.Response) {
-        res.clearCookie("refreshToken", { path: "/auth" });
+        res.clearCookie("refreshToken", { path: "/" });
     }
 }

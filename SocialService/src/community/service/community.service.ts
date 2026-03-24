@@ -25,6 +25,15 @@ export class CommunityService {
         category: community.category,
         createdAt: community.createdAt,
       });
+      // Иначе в Feed нет feed_sources (community, id) — владелец не видит посты группы в общей ленте.
+      const now = new Date().toISOString();
+      await this.outbox.createEvent(tx, SocialEvents.COMMUNITY_SUBSCRIBED, {
+        communityId: community.communityId,
+        userId,
+        role: 'OWNER',
+        createdAt: now,
+        version: 1,
+      });
       return community;
     });
   }
@@ -80,10 +89,13 @@ export class CommunityService {
 
     return this.db.transaction(async (tx: any) => {
       const member = await this.repo.join(tx, communityId, userId);
+      const now = new Date().toISOString();
       await this.outbox.createEvent(tx, SocialEvents.COMMUNITY_SUBSCRIBED, {
         communityId,
         userId,
         role: member.role,
+        createdAt: now,
+        version: 1,
       });
       return member;
     });
@@ -95,9 +107,12 @@ export class CommunityService {
 
     return this.db.transaction(async (tx: any) => {
       await this.repo.leave(tx, communityId, userId);
+      const now = new Date().toISOString();
       await this.outbox.createEvent(tx, SocialEvents.COMMUNITY_UNSUBSCRIBED, {
         communityId,
         userId,
+        createdAt: now,
+        version: 1,
       });
       return { success: true };
     });

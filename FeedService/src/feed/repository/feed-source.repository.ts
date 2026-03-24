@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../db/db";
 import { feed_sources } from "../../db/schema";
 
@@ -48,6 +48,10 @@ export class FeedSourceRepository {
                 ),
             );
     }
+
+  async deleteByOwnerUserId(ownerUserId: string, tx: any = db): Promise<void> {
+    await tx.delete(feed_sources).where(eq(feed_sources.ownerUserId, ownerUserId));
+  }
 
     async findOwnersBySource(
         sourceType: SourceType,

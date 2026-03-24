@@ -22,6 +22,7 @@ import {AuthModule} from "./auth/auth.module";
               KAFKA_AUTH_TOPIC: Joi.string().required(),
               DATABASE_URL: Joi.string().required(),
               COOKIE_SECURE: Joi.string().required(),
+              GATEWAY_SECRET: Joi.string().optional().allow(""),
           }),
           validationOptions: { abortEarly: false },
       }),

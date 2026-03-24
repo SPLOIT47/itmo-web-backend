@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "../../db/db";
 import { comments } from "../../db/schema";
 
@@ -23,6 +23,34 @@ export class CommentRepository {
             .where(eq(comments.commentId, commentId))
             .limit(1);
         return rows[0];
+    }
+
+    async findActiveByAuthor(
+        authorId: string,
+        tx: any = db,
+    ): Promise<CommentSelect[]> {
+        return tx
+            .select()
+            .from(comments)
+            .where(and(eq(comments.authorId, authorId), isNull(comments.deletedAt)))
+            .orderBy(desc(comments.createdAt));
+    }
+
+    async listActiveByPostIds(
+        postIds: string[],
+        tx: any = db,
+    ): Promise<CommentSelect[]> {
+        if (!postIds.length) return [];
+        return tx
+            .select()
+            .from(comments)
+            .where(
+                and(
+                    inArray(comments.postId, postIds),
+                    isNull(comments.deletedAt),
+                ),
+            )
+            .orderBy(desc(comments.createdAt));
     }
 
     async setDeletedAtAndIncrementVersion(

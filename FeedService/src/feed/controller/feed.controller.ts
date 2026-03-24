@@ -1,10 +1,13 @@
 import {
+    BadRequestException,
     Controller,
+    Delete,
     Get,
     Headers,
     Param,
     Query,
 } from "@nestjs/common";
+import { HttpCode, HttpStatus } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { FeedService } from "../service/feed.service";
 import { GetFeedQueryDto } from "../payload/request/get-feed.request";
@@ -17,11 +20,36 @@ export class FeedController {
 
     @Get("me")
     async getMyFeed(
-        @Headers("x-user-id") userId: string,
+        @Headers("x-user-id") userId: string | undefined,
         @Query() query: GetFeedQueryDto,
     ): Promise<FeedItemResponseDto[]> {
-        // In real gateway setup, header is expected to be validated earlier
-        return this.feedService.getFeedForUser(userId, query.limit, query.offset);
+        const uid = userId?.trim();
+        if (!uid) {
+            throw new BadRequestException(
+                "Missing x-user-id (используйте Gateway с JWT или передайте заголовок вручную)",
+            );
+        }
+        return this.feedService.getFeedForUser(uid, query.limit, query.offset);
+    }
+
+    @Get("community/:communityId")
+    async getCommunityPosts(
+        @Headers("x-user-id") userId: string | undefined,
+        @Param("communityId") communityId: string,
+        @Query() query: GetFeedQueryDto,
+    ): Promise<FeedItemResponseDto[]> {
+        const uid = userId?.trim();
+        if (!uid) {
+            throw new BadRequestException(
+                "Missing x-user-id (используйте Gateway с JWT или передайте заголовок вручную)",
+            );
+        }
+        return this.feedService.getCommunityPosts(
+            uid,
+            communityId,
+            query.limit,
+            query.offset,
+        );
     }
 
     @Get(":userId")
@@ -30,6 +58,20 @@ export class FeedController {
         @Query() query: GetFeedQueryDto,
     ): Promise<FeedItemResponseDto[]> {
         return this.feedService.getFeedForUser(userId, query.limit, query.offset);
+    }
+
+    @Delete("me")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteMyFeed(
+        @Headers("x-user-id") userId: string | undefined,
+    ): Promise<void> {
+        const uid = userId?.trim();
+        if (!uid) {
+            throw new BadRequestException(
+                "Missing x-user-id (используйте Gateway с JWT или передайте заголовок вручную)",
+            );
+        }
+        await this.feedService.deleteMyFeed(uid);
     }
 }
 

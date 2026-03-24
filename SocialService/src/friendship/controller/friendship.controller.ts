@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Id } from '../../common/annotation/id.annotation';
 import { FriendshipService } from '../service/friendship.service';
@@ -60,6 +60,12 @@ export class FriendshipController {
   @ApiOperation({ summary: 'Relation with user' })
   relation(@Id() userId: string, @Param('targetUserId') targetUserId: string) {
     return this.service.getRelation(userId, targetUserId);
+  }
+
+  @Delete('friends/me')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteMe(@Id() userId: string): Promise<void> {
+    await this.service.deleteUserData(userId);
   }
 }
 

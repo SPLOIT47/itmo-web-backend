@@ -1,7 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { and, desc, eq, isNull, lt, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 import { db } from "../../db/db";
 import { feed_items } from "../../db/schema";
+import type { FeedItemPayload } from "../payload/response/feed-item.response";
 
 type FeedItemInsert = typeof feed_items.$inferInsert;
 type FeedItemSelect = typeof feed_items.$inferSelect;
@@ -31,6 +32,27 @@ export class FeedRepository {
     async insertMany(items: FeedItemInsert[], tx: any = db): Promise<void> {
         if (!items.length) return;
         await tx.insert(feed_items).values(items);
+    }
+
+    async findExistingPostIdsForOwner(
+        ownerUserId: string,
+        postIds: string[],
+        tx: any = db,
+    ): Promise<Set<string>> {
+        if (postIds.length === 0) {
+            return new Set();
+        }
+        const rows = await tx
+            .select({ postId: feed_items.postId })
+            .from(feed_items)
+            .where(
+                and(
+                    eq(feed_items.ownerUserId, ownerUserId),
+                    inArray(feed_items.postId, postIds),
+                    isNull(feed_items.deletedAt),
+                ),
+            );
+        return new Set(rows.map((r) => r.postId));
     }
 
     async trimFeedForOwner(
@@ -73,7 +95,12 @@ export class FeedRepository {
         await tx
             .update(feed_items)
             .set({ payload })
-            .where(eq(feed_items.postId, postId));
+            .where(
+                and(
+                    eq(feed_items.postId, postId),
+                    isNull(feed_items.deletedAt),
+                ),
+            );
     }
 
     async softDeleteByPostId(postId: string, tx: any = db): Promise<void> {
@@ -81,6 +108,81 @@ export class FeedRepository {
             .update(feed_items)
             .set({ deletedAt: sql`now()` })
             .where(eq(feed_items.postId, postId));
+    }
+
+    async getPayloadByPostId(
+        postId: string,
+        tx: any = db,
+    ): Promise<FeedItemPayload | null> {
+        const rows = await tx
+            .select({ payload: feed_items.payload })
+            .from(feed_items)
+            .where(
+                and(
+                    eq(feed_items.postId, postId),
+                    isNull(feed_items.deletedAt),
+                ),
+            )
+            .limit(1);
+
+        return (rows[0]?.payload ?? null) as any;
+    }
+
+    async findCommunityPosts(
+        ownerUserId: string,
+        communityId: string,
+        limit: number,
+        offset: number,
+        tx: any = db,
+    ): Promise<
+        Array<{
+            postId: string;
+            authorType: "user" | "community";
+            authorId: string;
+            createdAt: Date;
+            payload: unknown;
+        }>
+    > {
+        const fetchSize = limit + offset + 50;
+        const rows = await tx
+            .select()
+            .from(feed_items)
+            .where(
+                and(
+                    eq(feed_items.ownerUserId, ownerUserId),
+                    eq(feed_items.authorType, "community"),
+                    eq(feed_items.authorId, communityId),
+                    isNull(feed_items.deletedAt),
+                ),
+            )
+            .orderBy(desc(feed_items.rankTime))
+            .limit(fetchSize);
+
+        const seen = new Set<string>();
+        const unique: typeof rows = [];
+
+        for (const row of rows) {
+            if (seen.has(row.postId)) continue;
+            seen.add(row.postId);
+            unique.push(row);
+        }
+
+        const sliced = unique.slice(offset, offset + limit);
+
+        return sliced.map((r) => ({
+            postId: r.postId,
+            authorType: r.authorType,
+            authorId: r.authorId,
+            createdAt: r.createdAt,
+            payload: r.payload,
+        }));
+    }
+
+    async deleteByOwnerUserId(ownerUserId: string, tx: any = db): Promise<void> {
+        await tx
+            .update(feed_items)
+            .set({ deletedAt: sql`now()` })
+            .where(and(eq(feed_items.ownerUserId, ownerUserId), isNull(feed_items.deletedAt)));
     }
 
     async deleteByOwnerAndAuthor(

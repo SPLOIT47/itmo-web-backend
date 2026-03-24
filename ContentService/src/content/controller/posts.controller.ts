@@ -3,10 +3,13 @@ import {
     Controller,
     Delete,
     Get,
+    HttpCode,
+    HttpStatus,
     Param,
     ParseUUIDPipe,
     Patch,
     Post as HttpPost,
+    Query,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ContentService } from "../service/content.service";
@@ -40,6 +43,17 @@ export class PostsController {
         @Param("id", new ParseUUIDPipe()) id: string,
     ) {
         return this.content.deletePost(userId, id);
+    }
+
+    @Get("posts/user/:userId")
+    listPostsByAuthor(
+        @Param("userId", new ParseUUIDPipe()) userId: string,
+        @Query("limit") limit?: string,
+        @Query("offset") offset?: string,
+    ) {
+        const l = Math.min(100, Math.max(1, parseInt(limit ?? "50", 10) || 50));
+        const o = Math.max(0, parseInt(offset ?? "0", 10) || 0);
+        return this.content.listPostsByAuthor(userId, l, o);
     }
 
     @Get("posts/:id")
@@ -78,6 +92,12 @@ export class PostsController {
         @Param("id", new ParseUUIDPipe()) id: string,
     ) {
         return this.content.deleteComment(userId, id);
+    }
+
+    @Delete("posts/me")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    deleteMyContent(@Id() userId: string) {
+        return this.content.deleteUserContent(userId);
     }
 }
 

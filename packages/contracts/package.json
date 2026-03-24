@@ -7,7 +7,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./kafka/auth": "./dist/kafka/auth.js",
-    "./kafka/content": "./dist/kafka/content.js"
+    "./kafka/content": "./dist/kafka/content.js",
+    "./kafka/social": "./dist/kafka/social.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"

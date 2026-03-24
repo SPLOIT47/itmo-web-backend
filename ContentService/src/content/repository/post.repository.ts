@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "../../db/db";
 import { posts } from "../../db/schema";
 
@@ -32,6 +32,31 @@ export class PostRepository {
             .where(and(eq(posts.postId, postId), isNull(posts.deletedAt)))
             .limit(1);
         return rows[0];
+    }
+
+    async findActiveByAuthor(
+        authorId: string,
+        tx: any = db,
+        opts?: { limit?: number; offset?: number },
+    ): Promise<PostSelect[]> {
+        const base = tx
+            .select()
+            .from(posts)
+            .where(and(eq(posts.authorId, authorId), isNull(posts.deletedAt)))
+            .orderBy(desc(posts.createdAt));
+
+        const limit = opts?.limit;
+        const offset = opts?.offset;
+        if (limit !== undefined && offset !== undefined) {
+            return base.limit(limit).offset(offset);
+        }
+        if (limit !== undefined) {
+            return base.limit(limit);
+        }
+        if (offset !== undefined) {
+            return base.offset(offset);
+        }
+        return base;
     }
 
     async update(

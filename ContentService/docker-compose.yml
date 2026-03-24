@@ -1,0 +1,21 @@
+name: content
+
+networks:
+  web:
+    external: true
+
+services:
+  content-service:
+    build:
+      context: ..
+      dockerfile: ContentService/Dockerfile
+    image: content-service:local
+    env_file:
+      - .env
+    ports:
+      - "3003:3000"
+    networks:
+      - web
+    mem_limit: 350m
+    cpus: "1.0"
+    restart: on-failure

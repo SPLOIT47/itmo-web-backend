@@ -24,8 +24,39 @@ export class FriendshipRepository {
     return rows[0] ?? null;
   }
 
+  /**
+   * Пара (userA, userB) уникальна в таблице целиком, в т.ч. для soft-deleted строк.
+   * Повторная дружба после remove: не INSERT, а снятие deleted_at.
+   */
   async createFriendship(tx: Tx, user1: string, user2: string) {
     const { userA, userB } = this.normalizePair(user1, user2);
+
+    const [existing] = await tx
+      .select()
+      .from(schema.friendships)
+      .where(
+        and(
+          eq(schema.friendships.userA, userA),
+          eq(schema.friendships.userB, userB),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      if (existing.deletedAt != null) {
+        const [row] = await tx
+          .update(schema.friendships)
+          .set({
+            deletedAt: null,
+            version: sql`${schema.friendships.version} + 1`,
+          })
+          .where(eq(schema.friendships.friendshipId, existing.friendshipId))
+          .returning();
+        return row;
+      }
+      return existing;
+    }
+
     const [row] = await tx
       .insert(schema.friendships)
       .values({ userA, userB })
@@ -116,6 +147,17 @@ export class FriendshipRepository {
       .from(schema.friendships)
       .where(and(isNull(schema.friendships.deletedAt), or(eq(schema.friendships.userA, userId), eq(schema.friendships.userB, userId))));
     return rows.map((f) => (f.userA === userId ? f.userB : f.userA));
+  }
+
+  async deleteFriendRequestsByUser(tx: Tx, userId: string): Promise<void> {
+    await tx
+      .delete(schema.friendRequests)
+      .where(
+        or(
+          eq(schema.friendRequests.requesterUserId, userId),
+          eq(schema.friendRequests.targetUserId, userId),
+        ),
+      );
   }
 }
 

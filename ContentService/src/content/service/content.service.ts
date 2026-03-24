@@ -1,9 +1,11 @@
 import {
     Injectable,
+    BadRequestException,
     ConflictException,
     ForbiddenException,
     NotFoundException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { db } from "../../db/db";
 import { PostRepository } from "../repository/post.repository";
 import { CommentRepository } from "../repository/comment.repository";
@@ -22,6 +24,8 @@ import { CreatePostDto } from "../dto/create-post.dto";
 import { UpdatePostDto } from "../dto/update-post.dto";
 import { CreateCommentDto } from "../dto/create-comment.dto";
 
+const COMMUNITY_MOD_ROLES = new Set(["OWNER", "ADMIN", "MODERATOR"]);
+
 @Injectable()
 export class ContentService {
     constructor(
@@ -29,13 +33,55 @@ export class ContentService {
         private readonly commentRepo: CommentRepository,
         private readonly likeRepo: LikeRepository,
         private readonly outbox: OutboxRepository,
+        private readonly config: ConfigService,
     ) {}
+
+    private async userCanDeleteCommunityPost(
+        userId: string,
+        communityId: string,
+    ): Promise<boolean> {
+        const base = this.config
+            .get<string>("SOCIAL_SERVICE_URL")
+            ?.trim();
+        if (!base) {
+            return false;
+        }
+        try {
+            const url = `${base.replace(/\/$/, "")}/communities/${encodeURIComponent(communityId)}/members`;
+            const res = await fetch(url);
+            if (!res.ok) {
+                return false;
+            }
+            const members = (await res.json()) as Array<{
+                userId: string;
+                role: string;
+            }>;
+            const row = members.find((m) => m.userId === userId);
+            return (
+                !!row && COMMUNITY_MOD_ROLES.has(String(row.role).toUpperCase())
+            );
+        } catch {
+            return false;
+        }
+    }
 
     async createPost(authorId: string, dto: CreatePostDto) {
         return db.transaction(async (tx) => {
+            const postAuthorKind = dto.postAuthorKind ?? "user";
+            const effectiveAuthorId =
+                postAuthorKind === "community"
+                    ? dto.communityId
+                    : authorId;
+
+            if (!effectiveAuthorId) {
+                throw new BadRequestException(
+                    "communityId is required for community posts",
+                );
+            }
+
             const post = await this.postRepo.create(
                 {
-                    authorId,
+                    authorId: effectiveAuthorId,
                     text: dto.text,
                     media: dto.media ?? [],
                 },
@@ -45,6 +91,10 @@ export class ContentService {
             const payload: PostCreatedPayload = {
                 postId: post.postId,
                 authorId: post.authorId,
+                postAuthorKind,
+                ...(postAuthorKind === "community"
+                    ? { postedByUserId: authorId }
+                    : {}),
                 text: post.text,
                 media: post.media,
                 createdAt: post.createdAt.toISOString(),
@@ -65,6 +115,62 @@ export class ContentService {
         }
 
         return post;
+    }
+
+    async listPostsByAuthor(
+        authorId: string,
+        limit: number,
+        offset: number,
+    ) {
+        const rows = await this.postRepo.findActiveByAuthor(authorId, db, {
+            limit,
+            offset,
+        });
+        const postIds = rows.map((p) => p.postId);
+        const [likes, comments] = await Promise.all([
+            this.likeRepo.listByPostIds(postIds, db),
+            this.commentRepo.listActiveByPostIds(postIds, db),
+        ]);
+
+        const likesByPost = new Map<string, string[]>();
+        for (const l of likes) {
+            const list = likesByPost.get(l.postId) ?? [];
+            list.push(l.userId);
+            likesByPost.set(l.postId, list);
+        }
+
+        const commentsByPost = new Map<
+            string,
+            Array<{
+                id: string;
+                authorId: string;
+                text: string;
+                createdAt: string;
+                updatedAt: string;
+            }>
+        >();
+        for (const c of comments) {
+            const list = commentsByPost.get(c.postId) ?? [];
+            list.push({
+                id: c.commentId,
+                authorId: c.authorId,
+                text: c.text,
+                createdAt: c.createdAt.toISOString(),
+                updatedAt: c.createdAt.toISOString(),
+            });
+            commentsByPost.set(c.postId, list);
+        }
+
+        return rows.map((p) => ({
+            postId: p.postId,
+            authorId: p.authorId,
+            text: p.text,
+            media: p.media,
+            likes: likesByPost.get(p.postId) ?? [],
+            comments: commentsByPost.get(p.postId) ?? [],
+            createdAt: p.createdAt.toISOString(),
+            updatedAt: p.updatedAt.toISOString(),
+        }));
     }
 
     async updatePost(authorId: string, postId: string, dto: UpdatePostDto) {
@@ -128,7 +234,13 @@ export class ContentService {
             }
 
             if (existing.authorId !== authorId) {
-                throw new ForbiddenException("Only author can delete post");
+                const canModerate = await this.userCanDeleteCommunityPost(
+                    authorId,
+                    existing.authorId,
+                );
+                if (!canModerate) {
+                    throw new ForbiddenException("Only author can delete post");
+                }
             }
 
             const deletedAt = new Date();
@@ -285,6 +397,64 @@ export class ContentService {
             await this.outbox.create("COMMENT_DELETED", payload, tx);
 
             return updated;
+        });
+    }
+
+    async deleteUserContent(userId: string): Promise<void> {
+        await db.transaction(async (tx) => {
+            const posts = await this.postRepo.findActiveByAuthor(userId, tx);
+            for (const post of posts) {
+                const deletedAt = new Date();
+                const updated = await this.postRepo.setDeletedAtAndIncrementVersion(
+                    post.postId,
+                    deletedAt,
+                    tx,
+                );
+
+                const payload: PostDeletedPayload = {
+                    postId: updated.postId,
+                    authorId: updated.authorId,
+                    deletedAt: deletedAt.toISOString(),
+                    version: updated.version,
+                };
+                await this.outbox.create("POST_DELETED", payload, tx);
+            }
+
+            const comments = await this.commentRepo.findActiveByAuthor(
+                userId,
+                tx,
+            );
+            for (const c of comments) {
+                const deletedAt = new Date();
+                const updated =
+                    await this.commentRepo.setDeletedAtAndIncrementVersion(
+                        c.commentId,
+                        deletedAt,
+                        tx,
+                    );
+
+                const payload: CommentDeletedPayload = {
+                    commentId: updated.commentId,
+                    postId: updated.postId,
+                    authorId: updated.authorId,
+                    deletedAt: deletedAt.toISOString(),
+                    version: updated.version,
+                };
+                await this.outbox.create("COMMENT_DELETED", payload, tx);
+            }
+
+            const likes = await this.likeRepo.listByUser(userId, tx);
+            for (const like of likes) {
+                const payload: PostUnlikedPayload = {
+                    postId: like.postId,
+                    userId,
+                    createdAt: like.createdAt.toISOString(),
+                    version: like.version + 1,
+                };
+
+                await this.likeRepo.delete(like.postId, userId, tx);
+                await this.outbox.create("POST_UNLIKED", payload, tx);
+            }
         });
     }
 }

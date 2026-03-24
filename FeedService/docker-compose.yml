@@ -1,0 +1,21 @@
+name: feed
+
+networks:
+  web:
+    external: true
+
+services:
+  feed-service:
+    build:
+      context: ..
+      dockerfile: FeedService/Dockerfile
+    image: feed-service:local
+    env_file:
+      - .env
+    ports:
+      - "3006:3000"
+    networks:
+      - web
+    mem_limit: 350m
+    cpus: "1.0"
+    restart: on-failure

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "../../db/db";
 import { likes } from "../../db/schema";
 
@@ -24,6 +24,27 @@ export class LikeRepository {
             )
             .limit(1);
         return rows[0];
+    }
+
+    async listByUser(
+        userId: string,
+        tx: any = db,
+    ): Promise<LikeSelect[]> {
+        return tx
+            .select()
+            .from(likes)
+            .where(eq(likes.userId, userId));
+    }
+
+    async listByPostIds(
+        postIds: string[],
+        tx: any = db,
+    ): Promise<LikeSelect[]> {
+        if (!postIds.length) return [];
+        return tx
+            .select()
+            .from(likes)
+            .where(inArray(likes.postId, postIds));
     }
 
     async create(data: LikeInsert, tx: any = db): Promise<LikeSelect> {

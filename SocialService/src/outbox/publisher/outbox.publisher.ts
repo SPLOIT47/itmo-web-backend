@@ -48,10 +48,13 @@ export class OutboxPublisher implements OnModuleInit, OnModuleDestroy {
             {
               key: evt.eventType,
               value: JSON.stringify({
-                id: evt.outboxEventId,
-                type: evt.eventType,
+                eventId: evt.outboxEventId,
+                eventType: evt.eventType,
                 payload: evt.payload,
-                createdAt: evt.createdAt,
+                createdAt:
+                  evt.createdAt instanceof Date
+                    ? evt.createdAt.toISOString()
+                    : String(evt.createdAt),
               }),
             },
           ],

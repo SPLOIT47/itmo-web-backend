@@ -1,0 +1,21 @@
+name: gateway
+
+networks:
+  web:
+    external: true
+
+services:
+  gateway:
+    build:
+      context: ..
+      dockerfile: Gateway/Dockerfile
+    image: gateway:local
+    env_file:
+      - .env
+    ports:
+      - "4000:4000"
+    networks:
+      - web
+    mem_limit: 300m
+    cpus: "0.5"
+    restart: on-failure

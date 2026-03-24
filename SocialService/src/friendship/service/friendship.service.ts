@@ -55,6 +55,20 @@ export class FriendshipService {
         friendshipId: createdFriendship.friendshipId,
       });
 
+      const now = new Date().toISOString();
+      await this.outbox.createEvent(tx, SocialEvents.FRIEND_ADDED, {
+        userId: request.requesterUserId,
+        friendId: request.targetUserId,
+        createdAt: now,
+        version: 1,
+      });
+      await this.outbox.createEvent(tx, SocialEvents.FRIEND_ADDED, {
+        userId: request.targetUserId,
+        friendId: request.requesterUserId,
+        createdAt: now,
+        version: 1,
+      });
+
       return createdFriendship;
     });
   }
@@ -105,10 +119,18 @@ export class FriendshipService {
       if (!friendship) throw new NotFoundException('Friendship not found');
 
       await this.repo.softDeleteFriendship(tx, userId, friendUserId);
+      const now = new Date().toISOString();
       await this.outbox.createEvent(tx, SocialEvents.FRIEND_REMOVED, {
-        friendshipId: friendship.friendshipId,
-        userA: friendship.userA,
-        userB: friendship.userB,
+        userId,
+        friendId: friendUserId,
+        createdAt: now,
+        version: 1,
+      });
+      await this.outbox.createEvent(tx, SocialEvents.FRIEND_REMOVED, {
+        userId: friendUserId,
+        friendId: userId,
+        createdAt: now,
+        version: 1,
       });
 
       return { success: true };
@@ -126,6 +148,39 @@ export class FriendshipService {
 
   async listOutgoing(userId: string) {
     return this.repo.listOutgoing(this.db, userId);
+  }
+
+  async deleteUserData(userId: string): Promise<void> {
+    await this.db.transaction(async (tx: any) => {
+      // 1) Remove friendships (emit outbox events so FeedService updates read-model)
+      const friends = await this.repo.listFriends(tx, userId);
+      for (const friendUserId of friends) {
+        const friendship = await this.repo.findFriendshipBetween(
+          tx,
+          userId,
+          friendUserId,
+        );
+        if (!friendship) continue;
+
+        await this.repo.softDeleteFriendship(tx, userId, friendUserId);
+        const now = new Date().toISOString();
+        await this.outbox.createEvent(tx, SocialEvents.FRIEND_REMOVED, {
+          userId,
+          friendId: friendUserId,
+          createdAt: now,
+          version: 1,
+        });
+        await this.outbox.createEvent(tx, SocialEvents.FRIEND_REMOVED, {
+          userId: friendUserId,
+          friendId: userId,
+          createdAt: now,
+          version: 1,
+        });
+      }
+
+      // 2) Remove all pending requests (no feed impact; feed is driven by FRIEND_ADDED/REMOVED)
+      await this.repo.deleteFriendRequestsByUser(tx, userId);
+    });
   }
 
   async getRelation(userId: string, targetUserId: string) {

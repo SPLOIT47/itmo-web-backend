@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import type { MediaKind } from '../payload/request/upload-media.request';
@@ -20,6 +20,7 @@ function sanitizeFilename(name: string): string {
 @Injectable()
 export class MediaService {
   private readonly maxUploadSizeBytes: number;
+  private readonly log = new Logger(MediaService.name);
 
   constructor(
     private readonly repo: MediaRepository,
@@ -87,10 +88,45 @@ export class MediaService {
     return entity;
   }
 
+  async deleteByOwnerUserId(ownerUserId: string): Promise<void> {
+    const entities = await this.repo.findActiveByOwnerUserId(ownerUserId);
+
+    for (const entity of entities) {
+      await this.minio.removeObject({
+        bucket: entity.bucket,
+        objectKey: entity.objectKey,
+      });
+      await this.repo.softDelete(entity.mediaId);
+    }
+  }
+
   async getDownloadUrl(mediaId: string) {
     const entity = await this.repo.findById(mediaId);
     if (!entity) throw new NotFoundException('Media file not found');
     return await this.minio.getPresignedDownloadUrl({ bucket: entity.bucket, objectKey: entity.objectKey });
+  }
+
+  async getDownloadStream(mediaId: string): Promise<{
+    stream: NodeJS.ReadableStream;
+    mimeType: string;
+    originalFilename: string;
+    sizeBytes: number;
+  }> {
+    const entity = await this.repo.findById(mediaId);
+    if (!entity) throw new NotFoundException('Media file not found');
+    this.log.log(
+      `download mediaId=${mediaId} bucket=${entity.bucket} objectKey=${entity.objectKey} mime=${entity.mimeType} size=${entity.sizeBytes}`,
+    );
+    const stream = await this.minio.getObjectStream({
+      bucket: entity.bucket,
+      objectKey: entity.objectKey,
+    });
+    return {
+      stream,
+      mimeType: entity.mimeType,
+      originalFilename: entity.originalFilename,
+      sizeBytes: entity.sizeBytes,
+    };
   }
 
   async presignUpload(params: { ownerUserId: string; originalFilename: string; mimeType: string; kind: MediaKind }) {

@@ -10,6 +10,7 @@ export const validationSchema = Joi.object({
   MINIO_SECRET_KEY: Joi.string().required(),
   MINIO_BUCKET: Joi.string().required(),
   MINIO_USE_SSL: Joi.boolean().truthy('true').falsy('false').default(false),
+  MINIO_PUBLIC_BASE_URL: Joi.string().uri().optional(),
 
   MAX_UPLOAD_SIZE_BYTES: Joi.number().integer().min(1).default(10 * 1024 * 1024),
 });

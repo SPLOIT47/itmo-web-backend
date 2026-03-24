@@ -26,6 +26,21 @@ export class MediaRepository {
     return rows[0] ?? null;
   }
 
+  async findActiveByOwnerUserId(
+    ownerUserId: string,
+    dbLike: any = this.db,
+  ): Promise<MediaFileEntity[]> {
+    return dbLike
+      .select()
+      .from(schema.mediaFiles)
+      .where(
+        and(
+          eq(schema.mediaFiles.ownerUserId, ownerUserId),
+          isNull(schema.mediaFiles.deletedAt),
+        ),
+      );
+  }
+
   async create(entity: Omit<MediaFileInsert, 'mediaId' | 'createdAt' | 'deletedAt' | 'version'>, tx: Tx = this.db) {
     const [row] = await tx.insert(schema.mediaFiles).values(entity).returning();
     return row as MediaFileEntity;

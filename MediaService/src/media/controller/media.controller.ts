@@ -5,8 +5,12 @@ import {
   Get,
   Param,
   Post,
+  HttpCode,
+  HttpStatus,
+  Res,
   UploadedFile,
   UseInterceptors,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiHeader, ApiOkResponse, ApiParam, ApiTags } from '@nestjs/swagger';
@@ -18,6 +22,7 @@ import { MediaFileResponse } from '../payload/response/media-file.response';
 import { PresignUploadResponse } from '../payload/response/presign-upload.response';
 import { PresignedUrlResponse } from '../payload/response/presigned-url.response';
 import { MediaService } from '../service/media.service';
+import type { Response } from 'express';
 
 const MAX_MULTER_FILE_SIZE = (() => {
   const raw = process.env.MAX_UPLOAD_SIZE_BYTES;
@@ -28,6 +33,8 @@ const MAX_MULTER_FILE_SIZE = (() => {
 @ApiTags('media')
 @Controller('media')
 export class MediaController {
+  private readonly log = new Logger(MediaController.name);
+
   constructor(private readonly media: MediaService) {}
 
   @Post('upload')
@@ -77,6 +84,37 @@ export class MediaController {
   async getUrl(@Param('id') id: string): Promise<PresignedUrlResponse> {
     const url = await this.media.getDownloadUrl(id);
     return { url };
+  }
+
+  @Get(':id/download')
+  @ApiParam({ name: 'id', format: 'uuid' })
+  async download(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    const { stream, mimeType, originalFilename, sizeBytes } = await this.media.getDownloadStream(id);
+    this.log.log(
+      `download response mediaId=${id} mime=${mimeType} size=${sizeBytes} file=${originalFilename}`,
+    );
+    res.setHeader('Content-Type', mimeType || 'application/octet-stream');
+    // inline: браузер пытается показать картинку в <img>
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${encodeURIComponent(originalFilename || 'file')}"`,
+    );
+    stream.on('error', () => {
+      this.log.error(`download stream error mediaId=${id}`);
+      if (!res.headersSent) {
+        res.status(500).end();
+      } else {
+        res.end();
+      }
+    });
+    stream.pipe(res);
+  }
+
+  @Delete('me')
+  @ApiHeader({ name: 'X-User-Id', required: true })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteMe(@Id() userId: string): Promise<void> {
+    await this.media.deleteByOwnerUserId(userId);
   }
 
   @Post('presign-upload')

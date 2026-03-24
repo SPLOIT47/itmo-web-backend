@@ -7,6 +7,7 @@ networks:
 volumes:
   kafka-data:
   pg-data:
+  minio-data:
 
 services:
   postgres:
@@ -29,6 +30,7 @@ services:
     cpus: "1.0"
     ports:
       - "127.0.0.1:5432:5432"
+    restart: unless-stopped
 
   kafka:
     image: confluentinc/cp-kafka:7.8.0
@@ -49,19 +51,19 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
       KAFKA_MIN_INSYNC_REPLICAS: 1
-
       KAFKA_HEAP_OPTS: "-Xms512m -Xmx768m"
     volumes:
       - kafka-data:/var/lib/kafka/data
     networks: [web]
     healthcheck:
-      test: [ "CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:9092 >/dev/null 2>&1" ]
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server kafka:9092 >/dev/null 2>&1"]
       interval: 10s
       timeout: 10s
       retries: 30
       start_period: 60s
     mem_limit: 1500m
     cpus: "2.0"
+    restart: unless-stopped
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -78,3 +80,26 @@ services:
     networks: [web]
     mem_limit: 256m
     cpus: "0.5"
+    restart: unless-stopped
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks: [web]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    mem_limit: 512m
+    cpus: "1.0"
+    restart: unless-stopped
