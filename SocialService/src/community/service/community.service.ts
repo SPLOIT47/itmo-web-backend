@@ -25,7 +25,6 @@ export class CommunityService {
         category: community.category,
         createdAt: community.createdAt,
       });
-      // Иначе в Feed нет feed_sources (community, id) — владелец не видит посты группы в общей ленте.
       const now = new Date().toISOString();
       await this.outbox.createEvent(tx, SocialEvents.COMMUNITY_SUBSCRIBED, {
         communityId: community.communityId,

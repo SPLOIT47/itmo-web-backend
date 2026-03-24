@@ -152,7 +152,6 @@ export class FriendshipService {
 
   async deleteUserData(userId: string): Promise<void> {
     await this.db.transaction(async (tx: any) => {
-      // 1) Remove friendships (emit outbox events so FeedService updates read-model)
       const friends = await this.repo.listFriends(tx, userId);
       for (const friendUserId of friends) {
         const friendship = await this.repo.findFriendshipBetween(
@@ -178,7 +177,6 @@ export class FriendshipService {
         });
       }
 
-      // 2) Remove all pending requests (no feed impact; feed is driven by FRIEND_ADDED/REMOVED)
       await this.repo.deleteFriendRequestsByUser(tx, userId);
     });
   }

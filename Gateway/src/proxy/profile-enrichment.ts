@@ -1,8 +1,3 @@
-/**
- * BFF: после ответа ProfileService подмешиваем {@code login} из AuthService
- * (см. POST /auth/users/public-batch).
- */
-
 export function shouldEnrichProfilePayload(
   fullPath: string,
   method: string,

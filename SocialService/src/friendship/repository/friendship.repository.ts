@@ -24,10 +24,6 @@ export class FriendshipRepository {
     return rows[0] ?? null;
   }
 
-  /**
-   * Пара (userA, userB) уникальна в таблице целиком, в т.ч. для soft-deleted строк.
-   * Повторная дружба после remove: не INSERT, а снятие deleted_at.
-   */
   async createFriendship(tx: Tx, user1: string, user2: string) {
     const { userA, userB } = this.normalizePair(user1, user2);
 

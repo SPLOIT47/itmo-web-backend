@@ -21,7 +21,6 @@ const PROTECTED_PREFIXES = [
   "/api/auth/me",
   "/api/auth/update",
   "/api/auth/logoutAll",
-  /** не `/api/feed/` — иначе `startsWith(prefix + "/")` даёт `/api/feed//` и /api/feed/me не попадает под guard */
   "/api/feed",
   "/api/profiles/me",
   "/api/profiles/batch",
@@ -92,7 +91,6 @@ export class ProxyController {
       }
     }
 
-    // Special-case: account deletion must orchestrate cleanup across services.
     if (req.method === "DELETE" && fullPath === "/api/auth/me") {
       const userId = req.userId;
       if (!userId) {

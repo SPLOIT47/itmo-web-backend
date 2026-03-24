@@ -2,7 +2,6 @@ export const SocialEvents = {
   FRIEND_REQUEST_SENT: 'FRIEND_REQUEST_SENT',
   FRIEND_REQUEST_ACCEPTED: 'FRIEND_REQUEST_ACCEPTED',
   FRIEND_REQUEST_DECLINED: 'FRIEND_REQUEST_DECLINED',
-  /** См. @app/contracts/kafka/social — подписка в ленте (feed_sources) */
   FRIEND_ADDED: 'FRIEND_ADDED',
   FRIEND_REMOVED: 'FRIEND_REMOVED',
 

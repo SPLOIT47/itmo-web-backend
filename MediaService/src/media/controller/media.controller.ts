@@ -94,7 +94,6 @@ export class MediaController {
       `download response mediaId=${id} mime=${mimeType} size=${sizeBytes} file=${originalFilename}`,
     );
     res.setHeader('Content-Type', mimeType || 'application/octet-stream');
-    // inline: браузер пытается показать картинку в <img>
     res.setHeader(
       'Content-Disposition',
       `inline; filename="${encodeURIComponent(originalFilename || 'file')}"`,

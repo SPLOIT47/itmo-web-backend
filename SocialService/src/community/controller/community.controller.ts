@@ -71,7 +71,6 @@ export class CommunityController {
     const communities = await this.service.my(userId);
 
     for (const c of communities) {
-      // community_id is primary key in db schema
       await this.service.leave(userId, c.communityId);
     }
   }

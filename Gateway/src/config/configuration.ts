@@ -3,7 +3,6 @@ export default () => ({
   jwt: {
     accessTokenSecret: process.env.ACCESS_TOKEN_SECRET ?? "access-secret",
   },
-  /** Shared with AuthService — см. POST /auth/users/public-batch */
   gateway: {
     secret: process.env.GATEWAY_SECRET ?? "",
   },

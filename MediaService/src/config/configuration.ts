@@ -10,7 +10,6 @@ export default () => ({
     secretKey: process.env.MINIO_SECRET_KEY!,
     bucket: process.env.MINIO_BUCKET!,
     useSSL: (process.env.MINIO_USE_SSL ?? 'false').toLowerCase() === 'true',
-    /** Публичный base URL для ссылок, которые открывает браузер (например http://localhost:9000). */
     publicBaseUrl: process.env.MINIO_PUBLIC_BASE_URL?.trim() || undefined,
   },
   upload: {

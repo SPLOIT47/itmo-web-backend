@@ -47,7 +47,6 @@ export class ProxyService {
     body?: unknown,
     query?: string,
     userId?: string,
-    /** Для multipart: передать сырой IncomingMessage, иначе axios шлёт пустое/битое тело → «Unexpected end of form» */
     rawBody?: IncomingMessage,
   ): Promise<{ data: unknown; status: number; headers: Record<string, string> }> {
     const { base, path } = this.getBaseUrl(apiPath);
@@ -85,7 +84,6 @@ export class ProxyService {
       validateStatus: () => true,
       maxBodyLength: Infinity,
       maxContentLength: Infinity,
-      // Всегда забираем raw bytes, дальше декодируем по content-type.
       responseType: "arraybuffer",
     };
     this.log.log(
@@ -135,9 +133,6 @@ export class ProxyService {
     };
   }
 
-  /**
-   * BFF: публичные login по userId (только для Gateway; Auth проверяет X-Gateway-Secret).
-   */
   async fetchPublicLogins(ids: string[]): Promise<Map<string, string>> {
     const secret = this.config.get<string>("gateway.secret");
     if (!secret) {

@@ -72,7 +72,6 @@ export class MinioService implements OnModuleInit {
     contentType?: string;
   }) {
     const expires = params.expiresSeconds ?? 60 * 10;
-    // MinIO client doesn't enforce Content-Type here; clients should still set it on PUT.
     const rawUrl = await this.client.presignedPutObject(params.bucket, params.objectKey, expires);
     return this.toBrowserReachableUrl(rawUrl);
   }

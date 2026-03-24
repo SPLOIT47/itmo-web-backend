@@ -18,7 +18,6 @@ class DbInitService implements OnModuleInit {
       return;
     }
 
-    // Автосоздание минимальной схемы для локального/compose запуска без отдельного шага миграций.
     await this.pool.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS media_files (
