@@ -84,11 +84,7 @@ export class CommunityDetailsRepository {
     return row;
   }
 
-  async replaceLinks(
-    tx: Tx,
-    communityId: string,
-    links: Array<{ title: string; url: string; pinned?: boolean }>,
-  ) {
+  async replaceLinks(tx: Tx, communityId: string, links: Array<{ title: string; url: string; pinned?: boolean }>) {
     await tx.delete(schema.communityLinks).where(eq(schema.communityLinks.communityId, communityId));
 
     if (links.length === 0) return;

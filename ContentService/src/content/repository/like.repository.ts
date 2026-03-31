@@ -8,11 +8,7 @@ type LikeSelect = typeof likes.$inferSelect;
 
 @Injectable()
 export class LikeRepository {
-    async findByPostAndUser(
-        postId: string,
-        userId: string,
-        tx: any = db,
-    ): Promise<LikeSelect | undefined> {
+    async findByPostAndUser(postId: string, userId: string, tx: any = db): Promise<LikeSelect | undefined> {
         const rows = await tx
             .select()
             .from(likes)
@@ -26,20 +22,14 @@ export class LikeRepository {
         return rows[0];
     }
 
-    async listByUser(
-        userId: string,
-        tx: any = db,
-    ): Promise<LikeSelect[]> {
+    async listByUser(userId: string, tx: any = db): Promise<LikeSelect[]> {
         return tx
             .select()
             .from(likes)
             .where(eq(likes.userId, userId));
     }
 
-    async listByPostIds(
-        postIds: string[],
-        tx: any = db,
-    ): Promise<LikeSelect[]> {
+    async listByPostIds(postIds: string[], tx: any = db): Promise<LikeSelect[]> {
         if (!postIds.length) return [];
         return tx
             .select()
@@ -52,11 +42,7 @@ export class LikeRepository {
         return rows[0]!;
     }
 
-    async delete(
-        postId: string,
-        userId: string,
-        tx: any = db,
-    ): Promise<void> {
+    async delete(postId: string, userId: string, tx: any = db): Promise<void> {
         await tx
             .delete(likes)
             .where(

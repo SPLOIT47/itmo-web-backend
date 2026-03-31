@@ -13,10 +13,7 @@ export class CommentRepository {
         return rows[0]!;
     }
 
-    async findById(
-        commentId: string,
-        tx: any = db,
-    ): Promise<CommentSelect | undefined> {
+    async findById(commentId: string, tx: any = db): Promise<CommentSelect | undefined> {
         const rows = await tx
             .select()
             .from(comments)
@@ -25,10 +22,7 @@ export class CommentRepository {
         return rows[0];
     }
 
-    async findActiveByAuthor(
-        authorId: string,
-        tx: any = db,
-    ): Promise<CommentSelect[]> {
+    async findCommentsByAuthor(authorId: string, tx: any = db): Promise<CommentSelect[]> {
         return tx
             .select()
             .from(comments)
@@ -36,10 +30,7 @@ export class CommentRepository {
             .orderBy(desc(comments.createdAt));
     }
 
-    async listActiveByPostIds(
-        postIds: string[],
-        tx: any = db,
-    ): Promise<CommentSelect[]> {
+    async listCommentsByPostIds(postIds: string[], tx: any = db): Promise<CommentSelect[]> {
         if (!postIds.length) return [];
         return tx
             .select()
@@ -53,11 +44,7 @@ export class CommentRepository {
             .orderBy(desc(comments.createdAt));
     }
 
-    async setDeletedAtAndIncrementVersion(
-        commentId: string,
-        deletedAt: Date,
-        tx: any = db,
-    ): Promise<CommentSelect> {
+    async setDeletedAtAndIncrementVersionByCommentId(commentId: string, deletedAt: Date, tx: any = db): Promise<CommentSelect> {
         const rows = await tx
             .update(comments)
             .set({

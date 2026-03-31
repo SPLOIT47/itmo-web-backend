@@ -32,16 +32,12 @@ export class PostsController {
     updatePost(
         @Id() userId: string,
         @Param("id", new ParseUUIDPipe()) id: string,
-        @Body() dto: UpdatePostDto,
-    ) {
+        @Body() dto: UpdatePostDto) {
         return this.content.updatePost(userId, id, dto);
     }
 
     @Delete("posts/:id")
-    deletePost(
-        @Id() userId: string,
-        @Param("id", new ParseUUIDPipe()) id: string,
-    ) {
+    deletePost(@Id() userId: string, @Param("id", new ParseUUIDPipe()) id: string) {
         return this.content.deletePost(userId, id);
     }
 
@@ -49,8 +45,7 @@ export class PostsController {
     listPostsByAuthor(
         @Param("userId", new ParseUUIDPipe()) userId: string,
         @Query("limit") limit?: string,
-        @Query("offset") offset?: string,
-    ) {
+        @Query("offset") offset?: string) {
         const l = Math.min(100, Math.max(1, parseInt(limit ?? "50", 10) || 50));
         const o = Math.max(0, parseInt(offset ?? "0", 10) || 0);
         return this.content.listPostsByAuthor(userId, l, o);
@@ -62,18 +57,12 @@ export class PostsController {
     }
 
     @HttpPost("posts/:id/like")
-    likePost(
-        @Id() userId: string,
-        @Param("id", new ParseUUIDPipe()) id: string,
-    ) {
+    likePost(@Id() userId: string, @Param("id", new ParseUUIDPipe()) id: string) {
         return this.content.likePost(userId, id);
     }
 
     @Delete("posts/:id/like")
-    unlikePost(
-        @Id() userId: string,
-        @Param("id", new ParseUUIDPipe()) id: string,
-    ) {
+    unlikePost(@Id() userId: string, @Param("id", new ParseUUIDPipe()) id: string) {
         return this.content.unlikePost(userId, id);
     }
 
@@ -81,16 +70,12 @@ export class PostsController {
     addComment(
         @Id() userId: string,
         @Param("id", new ParseUUIDPipe()) id: string,
-        @Body() dto: CreateCommentDto,
-    ) {
+        @Body() dto: CreateCommentDto) {
         return this.content.addComment(userId, id, dto);
     }
 
     @Delete("comments/:id")
-    deleteComment(
-        @Id() userId: string,
-        @Param("id", new ParseUUIDPipe()) id: string,
-    ) {
+    deleteComment(@Id() userId: string, @Param("id", new ParseUUIDPipe()) id: string) {
         return this.content.deleteComment(userId, id);
     }
 

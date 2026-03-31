@@ -1,9 +1,4 @@
-export function normalizeKafkaJsonEnvelope(raw: unknown): {
-    eventId: string;
-    eventType: string;
-    payload: unknown;
-    createdAt: string;
-} | null {
+export function normalizeKafkaJsonEnvelope(raw: unknown): { eventId: string; eventType: string; payload: unknown; createdAt: string; } | null {
     const tryParseObject = (v: unknown): Record<string, unknown> | null => {
         if (v == null) return null;
         if (Buffer.isBuffer(v)) {

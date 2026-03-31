@@ -10,9 +10,7 @@ import {
     varchar,
 } from "drizzle-orm/pg-core";
 
-export const posts = pgTable(
-    "posts",
-    {
+export const posts = pgTable("posts", {
         postId: uuid("post_id").primaryKey().defaultRandom(),
         authorId: uuid("author_id").notNull(),
         text: text("text").notNull(),
@@ -30,9 +28,7 @@ export const posts = pgTable(
     }),
 );
 
-export const comments = pgTable(
-    "comments",
-    {
+export const comments = pgTable("comments", {
         commentId: uuid("comment_id").primaryKey().defaultRandom(),
         postId: uuid("post_id").notNull(),
         authorId: uuid("author_id").notNull(),
@@ -53,9 +49,7 @@ export const comments = pgTable(
     }),
 );
 
-export const likes = pgTable(
-    "likes",
-    {
+export const likes = pgTable("likes", {
         postId: uuid("post_id").notNull(),
         userId: uuid("user_id").notNull(),
         createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -67,9 +61,7 @@ export const likes = pgTable(
     ],
 );
 
-export const outbox_events = pgTable(
-    "outbox_events",
-    {
+export const outbox_events = pgTable("outbox_events", {
         outboxEventId: uuid("outbox_event_id").primaryKey().defaultRandom(),
         eventType: varchar("event_type", { length: 64 }).notNull(),
         payload: jsonb("payload").notNull(),

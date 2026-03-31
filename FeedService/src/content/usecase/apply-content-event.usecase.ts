@@ -3,17 +3,7 @@ import { db } from "../../db/db";
 import { FeedRepository } from "../../feed/repository/feed.repository";
 import { FeedSourceRepository } from "../../feed/repository/feed-source.repository";
 import { InboxRepository } from "../../inbox/repository/inbox.repository";
-import {
-    ContentEvent,
-    ContentEventType,
-    PostCreatedPayload,
-    PostDeletedPayload,
-    PostUpdatedPayload,
-    PostLikedPayload,
-    PostUnlikedPayload,
-    CommentCreatedPayload,
-    CommentDeletedPayload,
-} from "@app/contracts/kafka/content";
+import { ContentEvent, ContentEventType, PostCreatedPayload, PostDeletedPayload, PostUpdatedPayload, PostLikedPayload, PostUnlikedPayload, CommentCreatedPayload, CommentDeletedPayload } from "@app/contracts/kafka/content";
 import configuration from "../../config/configuration";
 
 @Injectable()
@@ -28,12 +18,6 @@ export class ApplyContentEventUseCase {
 
     async handle(event: ContentEvent): Promise<void> {
         if (!event?.eventId || !event?.eventType) {
-            this.log.warn(
-                `Пропуск content-события: нет eventId/eventType: ${JSON.stringify({
-                    hasEventId: !!event?.eventId,
-                    hasEventType: !!event?.eventType,
-                })}`,
-            );
             return;
         }
 
@@ -142,9 +126,7 @@ export class ApplyContentEventUseCase {
         });
     }
 
-    private async fetchCommunityOwnerUserId(
-        communityId: string,
-    ): Promise<string | undefined> {
+    private async fetchCommunityOwnerUserId(communityId: string): Promise<string | undefined> {
         const base = configuration().socialServiceUrl?.trim();
         if (!base) {
             return undefined;
@@ -168,11 +150,7 @@ export class ApplyContentEventUseCase {
         }
     }
 
-    private async handlePostCreated(
-        payload: PostCreatedPayload,
-        tx: any,
-        communityOwnerUserId?: string,
-    ): Promise<void> {
+    private async handlePostCreated(payload: PostCreatedPayload, tx: any, communityOwnerUserId?: string): Promise<void> {
         const config = configuration();
         const ownersUser =
             await this.feedSourceRepository.findOwnersBySource(
@@ -248,10 +226,7 @@ export class ApplyContentEventUseCase {
         }
     }
 
-    private async handlePostUpdated(
-        payload: PostUpdatedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handlePostUpdated(payload: PostUpdatedPayload, tx: any): Promise<void> {
         const current =
             await this.feedRepository.getPayloadByPostId(payload.postId, tx);
 
@@ -275,17 +250,11 @@ export class ApplyContentEventUseCase {
         );
     }
 
-    private async handlePostDeleted(
-        payload: PostDeletedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handlePostDeleted(payload: PostDeletedPayload, tx: any): Promise<void> {
         await this.feedRepository.softDeleteByPostId(payload.postId, tx);
     }
 
-    private async handlePostLiked(
-        payload: PostLikedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handlePostLiked(payload: PostLikedPayload, tx: any): Promise<void> {
         const current =
             await this.feedRepository.getPayloadByPostId(payload.postId, tx);
         if (!current) return;
@@ -304,10 +273,7 @@ export class ApplyContentEventUseCase {
         }, tx);
     }
 
-    private async handlePostUnliked(
-        payload: PostUnlikedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handlePostUnliked(payload: PostUnlikedPayload, tx: any): Promise<void> {
         const current =
             await this.feedRepository.getPayloadByPostId(payload.postId, tx);
         if (!current) return;
@@ -322,10 +288,7 @@ export class ApplyContentEventUseCase {
         }, tx);
     }
 
-    private async handleCommentCreated(
-        payload: CommentCreatedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handleCommentCreated(payload: CommentCreatedPayload, tx: any): Promise<void> {
         const current =
             await this.feedRepository.getPayloadByPostId(payload.postId, tx);
         if (!current) return;
@@ -357,10 +320,7 @@ export class ApplyContentEventUseCase {
         }, tx);
     }
 
-    private async handleCommentDeleted(
-        payload: CommentDeletedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handleCommentDeleted(payload: CommentDeletedPayload, tx: any): Promise<void> {
         const current =
             await this.feedRepository.getPayloadByPostId(payload.postId, tx);
         if (!current) return;

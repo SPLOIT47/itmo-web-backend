@@ -10,11 +10,7 @@ export class FeedService {
         private readonly feedSourceRepository: FeedSourceRepository,
     ) {}
 
-    async getFeedForUser(
-        userId: string,
-        limit: number,
-        offset: number,
-    ): Promise<FeedItemResponseDto[]> {
+    async getFeedForUser(userId: string, limit: number, offset: number): Promise<FeedItemResponseDto[]> {
         const rows = await this.feedRepository.findFeedForUser(
             userId,
             limit,
@@ -34,12 +30,7 @@ export class FeedService {
         }));
     }
 
-    async getCommunityPosts(
-        userId: string,
-        communityId: string,
-        limit: number,
-        offset: number,
-    ): Promise<FeedItemResponseDto[]> {
+    async getCommunityPosts(userId: string, communityId: string, limit: number, offset: number,): Promise<FeedItemResponseDto[]> {
         const rows = await this.feedRepository.findCommunityPosts(
             userId,
             communityId,

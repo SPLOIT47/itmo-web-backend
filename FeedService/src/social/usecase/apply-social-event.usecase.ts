@@ -150,9 +150,7 @@ export class ApplySocialEventUseCase {
         }
     }
 
-    private async backfillFriendPostsFromContent(
-        p: FriendAddedPayload,
-    ): Promise<void> {
+    private async backfillFriendPostsFromContent(p: FriendAddedPayload,): Promise<void> {
         const base = this.config.get<string>("contentServiceUrl")?.trim();
         if (!base) {
             return;
@@ -312,10 +310,7 @@ export class ApplySocialEventUseCase {
         });
     }
 
-    private async handleFriendAdded(
-        payload: FriendAddedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handleFriendAdded(payload: FriendAddedPayload, tx: any): Promise<void> {
         await this.feedSourceRepository.addSource(
             payload.userId,
             "user",
@@ -325,10 +320,7 @@ export class ApplySocialEventUseCase {
         );
     }
 
-    private async handleFriendRemoved(
-        payload: FriendRemovedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handleFriendRemoved(payload: FriendRemovedPayload, tx: any): Promise<void> {
         await this.feedSourceRepository.removeSource(
             payload.userId,
             "user",
@@ -343,10 +335,7 @@ export class ApplySocialEventUseCase {
         );
     }
 
-    private async handleCommunitySubscribed(
-        payload: CommunitySubscribedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handleCommunitySubscribed(payload: CommunitySubscribedPayload, tx: any): Promise<void> {
         await this.feedSourceRepository.addSource(
             payload.userId,
             "community",
@@ -356,10 +345,7 @@ export class ApplySocialEventUseCase {
         );
     }
 
-    private async handleCommunityUnsubscribed(
-        payload: CommunityUnsubscribedPayload,
-        tx: any,
-    ): Promise<void> {
+    private async handleCommunityUnsubscribed(payload: CommunityUnsubscribedPayload, tx: any): Promise<void> {
         await this.feedSourceRepository.removeSource(
             payload.userId,
             "community",

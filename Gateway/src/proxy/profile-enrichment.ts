@@ -1,7 +1,4 @@
-export function shouldEnrichProfilePayload(
-  fullPath: string,
-  method: string,
-): boolean {
+export function shouldEnrichProfilePayload(fullPath: string, method: string,): boolean {
   const n = fullPath.replace(/\?.*$/, "");
   if (method === "POST" && n === "/api/profiles/batch") return true;
   if (method === "GET" && n.startsWith("/api/profiles/search")) return true;
@@ -44,10 +41,7 @@ export function extractProfileUserIds(data: unknown): string[] {
   return [];
 }
 
-export function mergeLoginsIntoProfiles(
-  data: unknown,
-  loginByUserId: Map<string, string>,
-): unknown {
+export function mergeLoginsIntoProfiles(data: unknown, loginByUserId: Map<string, string>,): unknown {
   if (!data || typeof data !== "object") return data;
   const o = data as Record<string, unknown>;
   if (Array.isArray(o.profiles)) {
@@ -81,10 +75,7 @@ export function mergeLoginsIntoProfiles(
   return data;
 }
 
-function enrichOneProfile(
-  p: Record<string, unknown>,
-  loginByUserId: Map<string, string>,
-): Record<string, unknown> {
+function enrichOneProfile(p: Record<string, unknown>, loginByUserId: Map<string, string>,): Record<string, unknown> {
   const id = String(p.id ?? "");
   const login = loginByUserId.get(id);
   if (!login) return p;

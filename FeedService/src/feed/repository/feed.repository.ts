@@ -9,12 +9,7 @@ type FeedItemSelect = typeof feed_items.$inferSelect;
 
 @Injectable()
 export class FeedRepository {
-    async findFeedForUser(
-        ownerUserId: string,
-        limit: number,
-        offset: number,
-        tx: any = db,
-    ): Promise<FeedItemSelect[]> {
+    async findFeedForUser(ownerUserId: string, limit: number, offset: number, tx: any = db): Promise<FeedItemSelect[]> {
         return tx
             .select()
             .from(feed_items)
@@ -34,11 +29,7 @@ export class FeedRepository {
         await tx.insert(feed_items).values(items);
     }
 
-    async findExistingPostIdsForOwner(
-        ownerUserId: string,
-        postIds: string[],
-        tx: any = db,
-    ): Promise<Set<string>> {
+    async findExistingPostIdsForOwner(ownerUserId: string, postIds: string[], tx: any = db): Promise<Set<string>> {
         if (postIds.length === 0) {
             return new Set();
         }
@@ -55,11 +46,7 @@ export class FeedRepository {
         return new Set(rows.map((r) => r.postId));
     }
 
-    async trimFeedForOwner(
-        ownerUserId: string,
-        maxSize: number,
-        tx: any = db,
-    ): Promise<void> {
+    async trimFeedForOwner(ownerUserId: string, maxSize: number, tx: any = db): Promise<void> {
         const rows = await tx
             .select({
                 rankTime: feed_items.rankTime,
@@ -87,11 +74,7 @@ export class FeedRepository {
             );
     }
 
-    async updatePayloadByPostId(
-        postId: string,
-        payload: unknown,
-        tx: any = db,
-    ): Promise<void> {
+    async updatePayloadByPostId(postId: string, payload: unknown, tx: any = db): Promise<void> {
         await tx
             .update(feed_items)
             .set({ payload })
@@ -110,10 +93,7 @@ export class FeedRepository {
             .where(eq(feed_items.postId, postId));
     }
 
-    async getPayloadByPostId(
-        postId: string,
-        tx: any = db,
-    ): Promise<FeedItemPayload | null> {
+    async getPayloadByPostId(postId: string, tx: any = db): Promise<FeedItemPayload | null> {
         const rows = await tx
             .select({ payload: feed_items.payload })
             .from(feed_items)

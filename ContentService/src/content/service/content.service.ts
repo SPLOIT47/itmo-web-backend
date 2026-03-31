@@ -1,25 +1,11 @@
-import {
-    Injectable,
-    BadRequestException,
-    ConflictException,
-    ForbiddenException,
-    NotFoundException,
-} from "@nestjs/common";
+import { Injectable, BadRequestException, ConflictException, ForbiddenException, NotFoundException,} from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { db } from "../../db/db";
 import { PostRepository } from "../repository/post.repository";
 import { CommentRepository } from "../repository/comment.repository";
 import { LikeRepository } from "../repository/like.repository";
 import { OutboxRepository } from "../../outbox/repository/outbox.repository";
-import {
-    PostCreatedPayload,
-    PostDeletedPayload,
-    PostLikedPayload,
-    PostUnlikedPayload,
-    PostUpdatedPayload,
-    CommentCreatedPayload,
-    CommentDeletedPayload,
-} from "@app/contracts/kafka/content";
+import { PostCreatedPayload, PostDeletedPayload, PostLikedPayload, PostUnlikedPayload, PostUpdatedPayload, CommentCreatedPayload, CommentDeletedPayload,} from "@app/contracts/kafka/content";
 import { CreatePostDto } from "../dto/create-post.dto";
 import { UpdatePostDto } from "../dto/update-post.dto";
 import { CreateCommentDto } from "../dto/create-comment.dto";
@@ -36,10 +22,7 @@ export class ContentService {
         private readonly config: ConfigService,
     ) {}
 
-    private async userCanDeleteCommunityPost(
-        userId: string,
-        communityId: string,
-    ): Promise<boolean> {
+    private async userCanDeleteCommunityPost(userId: string, communityId: string): Promise<boolean> {
         const base = this.config
             .get<string>("SOCIAL_SERVICE_URL")
             ?.trim();
@@ -117,19 +100,15 @@ export class ContentService {
         return post;
     }
 
-    async listPostsByAuthor(
-        authorId: string,
-        limit: number,
-        offset: number,
-    ) {
-        const rows = await this.postRepo.findActiveByAuthor(authorId, db, {
+    async listPostsByAuthor(authorId: string, limit: number, offset: number) {
+        const rows = await this.postRepo.findPostsByAuthor(authorId, db, {
             limit,
             offset,
         });
         const postIds = rows.map((p) => p.postId);
         const [likes, comments] = await Promise.all([
             this.likeRepo.listByPostIds(postIds, db),
-            this.commentRepo.listActiveByPostIds(postIds, db),
+            this.commentRepo.listCommentsByPostIds(postIds, db),
         ]);
 
         const likesByPost = new Map<string, string[]>();
@@ -380,7 +359,7 @@ export class ContentService {
             const deletedAt = new Date();
 
             const updated =
-                await this.commentRepo.setDeletedAtAndIncrementVersion(
+                await this.commentRepo.setDeletedAtAndIncrementVersionByCommentId(
                     commentId,
                     deletedAt,
                     tx,
@@ -402,7 +381,7 @@ export class ContentService {
 
     async deleteUserContent(userId: string): Promise<void> {
         await db.transaction(async (tx) => {
-            const posts = await this.postRepo.findActiveByAuthor(userId, tx);
+            const posts = await this.postRepo.findPostsByAuthor(userId, tx);
             for (const post of posts) {
                 const deletedAt = new Date();
                 const updated = await this.postRepo.setDeletedAtAndIncrementVersion(
@@ -420,14 +399,14 @@ export class ContentService {
                 await this.outbox.create("POST_DELETED", payload, tx);
             }
 
-            const comments = await this.commentRepo.findActiveByAuthor(
+            const comments = await this.commentRepo.findCommentsByAuthor(
                 userId,
                 tx,
             );
             for (const c of comments) {
                 const deletedAt = new Date();
                 const updated =
-                    await this.commentRepo.setDeletedAtAndIncrementVersion(
+                    await this.commentRepo.setDeletedAtAndIncrementVersionByCommentId(
                         c.commentId,
                         deletedAt,
                         tx,

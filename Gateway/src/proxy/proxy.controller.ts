@@ -1,10 +1,10 @@
 import {
-  All,
-  Logger,
-  Req,
-  Res,
-  Controller,
-  UnauthorizedException,
+    All,
+    Logger,
+    Req,
+    Res,
+    Controller,
+    UnauthorizedException, ExecutionContext,
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { ProxyService } from "./proxy.service";
@@ -78,7 +78,7 @@ export class ProxyController {
       }
       const ctx = {
         switchToHttp: () => ({ getRequest: () => req }),
-      } as unknown as import("@nestjs/common").ExecutionContext;
+      } as ExecutionContext;
       try {
         await this.jwtGuard.canActivate(ctx);
         this.log.log(`auth ok path=${fullPath} userId=${req.userId ?? "n/a"}`);

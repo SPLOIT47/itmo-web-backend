@@ -16,10 +16,7 @@ export class InboxRepository {
         return rows.length > 0;
     }
 
-    async getLastVersionForAggregate(
-        aggregateId: string,
-        tx: any = db,
-    ): Promise<number | null> {
+    async getLastVersionForAggregate(aggregateId: string, tx: any = db,): Promise<number | null> {
         const rows = await tx
             .select({ version: inbox_events.version })
             .from(inbox_events)
@@ -29,10 +26,7 @@ export class InboxRepository {
         return rows[0]?.version ?? null;
     }
 
-    async save(
-        data: InboxInsert,
-        tx: any = db,
-    ): Promise<void> {
+    async save(data: InboxInsert, tx: any = db,): Promise<void> {
         await tx.insert(inbox_events).values(data).onConflictDoNothing({
             target: [inbox_events.aggregateId, inbox_events.version],
         });

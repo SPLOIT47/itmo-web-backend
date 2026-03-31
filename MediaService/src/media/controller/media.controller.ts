@@ -90,16 +90,12 @@ export class MediaController {
   @ApiParam({ name: 'id', format: 'uuid' })
   async download(@Param('id') id: string, @Res() res: Response): Promise<void> {
     const { stream, mimeType, originalFilename, sizeBytes } = await this.media.getDownloadStream(id);
-    this.log.log(
-      `download response mediaId=${id} mime=${mimeType} size=${sizeBytes} file=${originalFilename}`,
-    );
     res.setHeader('Content-Type', mimeType || 'application/octet-stream');
     res.setHeader(
       'Content-Disposition',
       `inline; filename="${encodeURIComponent(originalFilename || 'file')}"`,
     );
     stream.on('error', () => {
-      this.log.error(`download stream error mediaId=${id}`);
       if (!res.headersSent) {
         res.status(500).end();
       } else {
@@ -119,10 +115,7 @@ export class MediaController {
   @Post('presign-upload')
   @ApiHeader({ name: 'X-User-Id', required: true })
   @ApiOkResponse({ type: PresignUploadResponse })
-  async presignUpload(
-    @Id() ownerUserId: string,
-    @Body() body: PresignUploadRequest,
-  ): Promise<PresignUploadResponse> {
+  async presignUpload(@Id() ownerUserId: string, @Body() body: PresignUploadRequest,): Promise<PresignUploadResponse> {
     const { entity, uploadUrl } = await this.media.presignUpload({
       ownerUserId,
       originalFilename: body.originalFilename,

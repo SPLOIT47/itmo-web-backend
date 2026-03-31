@@ -46,11 +46,7 @@ export class OutboxRepository {
             .where(eq(outbox_events.outboxEventId, outboxEventId));
     }
 
-    async markFailed(
-        outboxEventId: string,
-        error: string,
-        tx: any = db,
-    ): Promise<void> {
+    async markFailed(outboxEventId: string, error: string, tx: any = db): Promise<void> {
         await tx
             .update(outbox_events)
             .set({

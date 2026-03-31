@@ -32,12 +32,7 @@ export class FeedSourceRepository {
             });
     }
 
-    async removeSource(
-        ownerUserId: string,
-        sourceType: SourceType,
-        sourceId: string,
-        tx: any = db,
-    ): Promise<void> {
+    async removeSource(ownerUserId: string, sourceType: SourceType, sourceId: string, tx: any = db): Promise<void> {
         await tx
             .delete(feed_sources)
             .where(
@@ -53,11 +48,7 @@ export class FeedSourceRepository {
     await tx.delete(feed_sources).where(eq(feed_sources.ownerUserId, ownerUserId));
   }
 
-    async findOwnersBySource(
-        sourceType: SourceType,
-        sourceId: string,
-        tx: any = db,
-    ): Promise<string[]> {
+    async findOwnersBySource(sourceType: SourceType, sourceId: string, tx: any = db): Promise<string[]> {
         const rows = await tx
             .select({
                 ownerUserId: feed_sources.ownerUserId,

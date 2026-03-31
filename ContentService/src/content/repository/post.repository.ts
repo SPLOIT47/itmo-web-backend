@@ -22,10 +22,7 @@ export class PostRepository {
         return rows[0];
     }
 
-    async findByIdNotDeleted(
-        postId: string,
-        tx: any = db,
-    ): Promise<PostSelect | undefined> {
+    async findByIdNotDeleted(postId: string, tx: any = db): Promise<PostSelect | undefined> {
         const rows = await tx
             .select()
             .from(posts)
@@ -34,11 +31,7 @@ export class PostRepository {
         return rows[0];
     }
 
-    async findActiveByAuthor(
-        authorId: string,
-        tx: any = db,
-        opts?: { limit?: number; offset?: number },
-    ): Promise<PostSelect[]> {
+    async findPostsByAuthor(authorId: string, tx: any = db, opts?: { limit?: number; offset?: number }): Promise<PostSelect[]> {
         const base = tx
             .select()
             .from(posts)
@@ -61,10 +54,8 @@ export class PostRepository {
 
     async update(
         postId: string,
-        data: Partial<Omit<PostInsert, "version">> & {
-            version?: { increment: 1 };
-        },
-        tx: any = db,
+        data: Partial<Omit<PostInsert, "version">> & { version?: { increment: 1 }; },
+        tx: any = db
     ): Promise<PostSelect> {
         const { version: _v, ...rest } = data as Partial<PostInsert> & {
             version?: { increment: 1 };
@@ -84,11 +75,7 @@ export class PostRepository {
         return rows[0]!;
     }
 
-    async setDeletedAtAndIncrementVersion(
-        postId: string,
-        deletedAt: Date,
-        tx: any = db,
-    ): Promise<PostSelect> {
+    async setDeletedAtAndIncrementVersion(postId: string, deletedAt: Date, tx: any = db): Promise<PostSelect> {
         const rows = await tx
             .update(posts)
             .set({

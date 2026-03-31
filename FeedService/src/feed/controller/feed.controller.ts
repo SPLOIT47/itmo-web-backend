@@ -19,14 +19,11 @@ export class FeedController {
     constructor(private readonly feedService: FeedService) {}
 
     @Get("me")
-    async getMyFeed(
-        @Headers("x-user-id") userId: string | undefined,
-        @Query() query: GetFeedQueryDto,
-    ): Promise<FeedItemResponseDto[]> {
+    async getMyFeed(@Headers("x-user-id") userId: string | undefined, @Query() query: GetFeedQueryDto,): Promise<FeedItemResponseDto[]> {
         const uid = userId?.trim();
         if (!uid) {
             throw new BadRequestException(
-                "Missing x-user-id (используйте Gateway с JWT или передайте заголовок вручную)",
+                "Missing x-user-id",
             );
         }
         return this.feedService.getFeedForUser(uid, query.limit, query.offset);
@@ -36,12 +33,12 @@ export class FeedController {
     async getCommunityPosts(
         @Headers("x-user-id") userId: string | undefined,
         @Param("communityId") communityId: string,
-        @Query() query: GetFeedQueryDto,
+        @Query() query: GetFeedQueryDto
     ): Promise<FeedItemResponseDto[]> {
         const uid = userId?.trim();
         if (!uid) {
             throw new BadRequestException(
-                "Missing x-user-id (используйте Gateway с JWT или передайте заголовок вручную)",
+                "Missing x-user-id",
             );
         }
         return this.feedService.getCommunityPosts(
@@ -53,22 +50,18 @@ export class FeedController {
     }
 
     @Get(":userId")
-    async getUserFeed(
-        @Param("userId") userId: string,
-        @Query() query: GetFeedQueryDto,
+    async getUserFeed(@Param("userId") userId: string, @Query() query: GetFeedQueryDto,
     ): Promise<FeedItemResponseDto[]> {
         return this.feedService.getFeedForUser(userId, query.limit, query.offset);
     }
 
     @Delete("me")
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteMyFeed(
-        @Headers("x-user-id") userId: string | undefined,
-    ): Promise<void> {
+    async deleteMyFeed(@Headers("x-user-id") userId: string | undefined): Promise<void> {
         const uid = userId?.trim();
         if (!uid) {
             throw new BadRequestException(
-                "Missing x-user-id (используйте Gateway с JWT или передайте заголовок вручную)",
+                "Missing x-user-idы",
             );
         }
         await this.feedService.deleteMyFeed(uid);

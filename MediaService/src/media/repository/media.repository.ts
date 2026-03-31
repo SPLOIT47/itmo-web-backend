@@ -21,11 +21,6 @@ export class MediaRepository {
     return rows[0] ?? null;
   }
 
-  async findByIdIncludingDeleted(mediaId: string, dbLike: any = this.db): Promise<MediaFileEntity | null> {
-    const rows = await dbLike.select().from(schema.mediaFiles).where(eq(schema.mediaFiles.mediaId, mediaId)).limit(1);
-    return rows[0] ?? null;
-  }
-
   async findActiveByOwnerUserId(
     ownerUserId: string,
     dbLike: any = this.db,

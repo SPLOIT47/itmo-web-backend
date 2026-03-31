@@ -17,7 +17,7 @@ export class ContentEventConsumer {
         const parsed = normalizeKafkaJsonEnvelope(raw);
         if (!parsed) {
             this.log.warn(
-                `Content Kafka: не удалось разобрать сообщение (topic=${process.env.KAFKA_CONTENT_TOPIC ?? "content.topic"})`,
+                `Content Kafka: failed to parse (topic=${process.env.KAFKA_CONTENT_TOPIC ?? "content.topic"})`,
             );
             return;
         }
