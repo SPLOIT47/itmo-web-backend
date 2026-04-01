@@ -14,7 +14,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY package*.json ./
-# Keep dev deps because drizzle-kit is used at runtime by db:push.
 RUN npm install --fetch-retries=10 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
 COPY --from=builder /app/dist ./dist

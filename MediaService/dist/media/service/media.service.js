@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var MediaService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MediaService = void 0;
 const common_1 = require("@nestjs/common");
@@ -25,11 +26,12 @@ function sanitizeFilename(name) {
         .replace(/^_+|_+$/g, '')
         .slice(0, 200);
 }
-let MediaService = class MediaService {
+let MediaService = MediaService_1 = class MediaService {
     repo;
     minio;
     config;
     maxUploadSizeBytes;
+    log = new common_1.Logger(MediaService_1.name);
     constructor(repo, minio, config) {
         this.repo = repo;
         this.minio = minio;
@@ -104,6 +106,22 @@ let MediaService = class MediaService {
             throw new common_1.NotFoundException('Media file not found');
         return await this.minio.getPresignedDownloadUrl({ bucket: entity.bucket, objectKey: entity.objectKey });
     }
+    async getDownloadStream(mediaId) {
+        const entity = await this.repo.findById(mediaId);
+        if (!entity)
+            throw new common_1.NotFoundException('Media file not found');
+        this.log.log(`download mediaId=${mediaId} bucket=${entity.bucket} objectKey=${entity.objectKey} mime=${entity.mimeType} size=${entity.sizeBytes}`);
+        const stream = await this.minio.getObjectStream({
+            bucket: entity.bucket,
+            objectKey: entity.objectKey,
+        });
+        return {
+            stream,
+            mimeType: entity.mimeType,
+            originalFilename: entity.originalFilename,
+            sizeBytes: entity.sizeBytes,
+        };
+    }
     async presignUpload(params) {
         if (!ALLOWED_MIME_TYPES.has(params.mimeType)) {
             throw new common_1.BadRequestException(`Unsupported mimeType: ${params.mimeType}`);
@@ -126,7 +144,7 @@ let MediaService = class MediaService {
     }
 };
 exports.MediaService = MediaService;
-exports.MediaService = MediaService = __decorate([
+exports.MediaService = MediaService = MediaService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [media_repository_1.MediaRepository,
         minio_service_1.MinioService,

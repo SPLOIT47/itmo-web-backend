@@ -7,6 +7,7 @@ export declare class MediaService {
     private readonly minio;
     private readonly config;
     private readonly maxUploadSizeBytes;
+    private readonly log;
     constructor(repo: MediaRepository, minio: MinioService, config: ConfigService);
     uploadMultipart(params: {
         ownerUserId: string;
@@ -59,6 +60,12 @@ export declare class MediaService {
     }>;
     deleteByOwnerUserId(ownerUserId: string): Promise<void>;
     getDownloadUrl(mediaId: string): Promise<string>;
+    getDownloadStream(mediaId: string): Promise<{
+        stream: NodeJS.ReadableStream;
+        mimeType: string;
+        originalFilename: string;
+        sizeBytes: number;
+    }>;
     presignUpload(params: {
         ownerUserId: string;
         originalFilename: string;

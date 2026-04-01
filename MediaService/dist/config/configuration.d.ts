@@ -10,6 +10,7 @@ declare const _default: () => {
         secretKey: string;
         bucket: string;
         useSSL: boolean;
+        publicBaseUrl: string | undefined;
     };
     upload: {
         maxSizeBytes: number;

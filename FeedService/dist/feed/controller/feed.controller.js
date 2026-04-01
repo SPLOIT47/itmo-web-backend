@@ -26,14 +26,14 @@ let FeedController = class FeedController {
     async getMyFeed(userId, query) {
         const uid = userId?.trim();
         if (!uid) {
-            throw new common_1.BadRequestException("Missing x-user-id (используйте Gateway с JWT или передайте заголовок вручную)");
+            throw new common_1.BadRequestException("Missing x-user-id");
         }
         return this.feedService.getFeedForUser(uid, query.limit, query.offset);
     }
     async getCommunityPosts(userId, communityId, query) {
         const uid = userId?.trim();
         if (!uid) {
-            throw new common_1.BadRequestException("Missing x-user-id (используйте Gateway с JWT или передайте заголовок вручную)");
+            throw new common_1.BadRequestException("Missing x-user-id");
         }
         return this.feedService.getCommunityPosts(uid, communityId, query.limit, query.offset);
     }
@@ -43,7 +43,7 @@ let FeedController = class FeedController {
     async deleteMyFeed(userId) {
         const uid = userId?.trim();
         if (!uid) {
-            throw new common_1.BadRequestException("Missing x-user-id (используйте Gateway с JWT или передайте заголовок вручную)");
+            throw new common_1.BadRequestException("Missing x-user-idы");
         }
         await this.feedService.deleteMyFeed(uid);
     }

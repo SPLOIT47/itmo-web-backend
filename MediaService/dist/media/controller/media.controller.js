@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var MediaController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MediaController = void 0;
 const common_1 = require("@nestjs/common");
@@ -29,8 +30,9 @@ const MAX_MULTER_FILE_SIZE = (() => {
     const n = raw ? Number(raw) : 10 * 1024 * 1024;
     return Number.isFinite(n) && n > 0 ? n : 10 * 1024 * 1024;
 })();
-let MediaController = class MediaController {
+let MediaController = MediaController_1 = class MediaController {
     media;
+    log = new common_1.Logger(MediaController_1.name);
     constructor(media) {
         this.media = media;
     }
@@ -49,6 +51,20 @@ let MediaController = class MediaController {
     async getUrl(id) {
         const url = await this.media.getDownloadUrl(id);
         return { url };
+    }
+    async download(id, res) {
+        const { stream, mimeType, originalFilename, sizeBytes } = await this.media.getDownloadStream(id);
+        res.setHeader('Content-Type', mimeType || 'application/octet-stream');
+        res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(originalFilename || 'file')}"`);
+        stream.on('error', () => {
+            if (!res.headersSent) {
+                res.status(500).end();
+            }
+            else {
+                res.end();
+            }
+        });
+        stream.pipe(res);
     }
     async deleteMe(userId) {
         await this.media.deleteByOwnerUserId(userId);
@@ -119,6 +135,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], MediaController.prototype, "getUrl", null);
 __decorate([
+    (0, common_1.Get)(':id/download'),
+    (0, swagger_1.ApiParam)({ name: 'id', format: 'uuid' }),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], MediaController.prototype, "download", null);
+__decorate([
     (0, common_1.Delete)('me'),
     (0, swagger_1.ApiHeader)({ name: 'X-User-Id', required: true }),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
@@ -137,7 +162,7 @@ __decorate([
     __metadata("design:paramtypes", [String, presign_upload_request_1.PresignUploadRequest]),
     __metadata("design:returntype", Promise)
 ], MediaController.prototype, "presignUpload", null);
-exports.MediaController = MediaController = __decorate([
+exports.MediaController = MediaController = MediaController_1 = __decorate([
     (0, swagger_1.ApiTags)('media'),
     (0, common_1.Controller)('media'),
     __metadata("design:paramtypes", [media_service_1.MediaService])

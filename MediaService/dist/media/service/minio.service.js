@@ -19,6 +19,7 @@ let MinioService = MinioService_1 = class MinioService {
     logger = new common_1.Logger(MinioService_1.name);
     client;
     bucket;
+    publicBaseUrl;
     constructor(config) {
         this.config = config;
         const endpoint = this.config.get('minio.endpoint', { infer: true });
@@ -26,6 +27,7 @@ let MinioService = MinioService_1 = class MinioService {
         const useSSL = this.config.get('minio.useSSL', { infer: true });
         const accessKey = this.config.get('minio.accessKey', { infer: true });
         const secretKey = this.config.get('minio.secretKey', { infer: true });
+        this.publicBaseUrl = this.config.get('minio.publicBaseUrl', { infer: true });
         this.bucket = this.config.get('minio.bucket', { infer: true });
         this.client = new minio_1.Client({ endPoint: endpoint, port, useSSL, accessKey, secretKey });
     }
@@ -48,16 +50,34 @@ let MinioService = MinioService_1 = class MinioService {
     async removeObject(params) {
         await this.client.removeObject(params.bucket, params.objectKey);
     }
-    async statObject(params) {
-        return await this.client.statObject(params.bucket, params.objectKey);
+    async getObjectStream(params) {
+        return await this.client.getObject(params.bucket, params.objectKey);
     }
     async getPresignedDownloadUrl(params) {
         const expires = params.expiresSeconds ?? 60 * 10;
-        return await this.client.presignedGetObject(params.bucket, params.objectKey, expires);
+        const rawUrl = await this.client.presignedGetObject(params.bucket, params.objectKey, expires);
+        return this.toBrowserReachableUrl(rawUrl);
     }
     async getPresignedUploadUrl(params) {
         const expires = params.expiresSeconds ?? 60 * 10;
-        return await this.client.presignedPutObject(params.bucket, params.objectKey, expires);
+        const rawUrl = await this.client.presignedPutObject(params.bucket, params.objectKey, expires);
+        return this.toBrowserReachableUrl(rawUrl);
+    }
+    toBrowserReachableUrl(rawUrl) {
+        if (!this.publicBaseUrl) {
+            return rawUrl;
+        }
+        try {
+            const src = new URL(rawUrl);
+            const dstBase = new URL(this.publicBaseUrl);
+            src.protocol = dstBase.protocol;
+            src.hostname = dstBase.hostname;
+            src.port = dstBase.port;
+            return src.toString();
+        }
+        catch {
+            return rawUrl;
+        }
     }
 };
 exports.MinioService = MinioService;

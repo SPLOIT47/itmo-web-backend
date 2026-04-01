@@ -33,10 +33,6 @@ let ApplyContentEventUseCase = ApplyContentEventUseCase_1 = class ApplyContentEv
     }
     async handle(event) {
         if (!event?.eventId || !event?.eventType) {
-            this.log.warn(`Пропуск content-события: нет eventId/eventType: ${JSON.stringify({
-                hasEventId: !!event?.eventId,
-                hasEventType: !!event?.eventType,
-            })}`);
             return;
         }
         let communityOwnerUserId;

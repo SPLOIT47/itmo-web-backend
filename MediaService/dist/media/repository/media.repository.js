@@ -29,10 +29,6 @@ let MediaRepository = class MediaRepository {
             .limit(1);
         return rows[0] ?? null;
     }
-    async findByIdIncludingDeleted(mediaId, dbLike = this.db) {
-        const rows = await dbLike.select().from(db_1.schema.mediaFiles).where((0, drizzle_orm_1.eq)(db_1.schema.mediaFiles.mediaId, mediaId)).limit(1);
-        return rows[0] ?? null;
-    }
     async findActiveByOwnerUserId(ownerUserId, dbLike = this.db) {
         return dbLike
             .select()

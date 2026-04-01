@@ -25,8 +25,6 @@ COPY package*.json ./
 COPY FeedService/package*.json ./FeedService/
 COPY packages/contracts/package*.json ./packages/contracts/
 
-# NOTE: we intentionally do NOT omit dev deps here because FeedService uses drizzle-kit
-# at container runtime (db:push).
 RUN npm ci --fetch-retries=10 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
 COPY --from=builder /app/FeedService/dist ./FeedService/dist

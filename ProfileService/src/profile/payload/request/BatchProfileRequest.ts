@@ -1,10 +1,6 @@
 import { Transform } from "class-transformer";
 import { ArrayNotEmpty, IsArray, IsUUID } from "class-validator";
 
-/**
- * Coerce common client/proxy shapes into string[] and strip accidental JSON quote wrapping
- * on each id (e.g. "\"uuid\"") so @IsUUID("all") matches what validator.js expects.
- */
 function normalizeProfileBatchIds(value: unknown): string[] {
     if (value === undefined || value === null) {
         return [];

@@ -7,7 +7,6 @@ export declare class MediaRepository {
     private readonly db;
     constructor(db: Database);
     findById(mediaId: string, dbLike?: any): Promise<MediaFileEntity | null>;
-    findByIdIncludingDeleted(mediaId: string, dbLike?: any): Promise<MediaFileEntity | null>;
     findActiveByOwnerUserId(ownerUserId: string, dbLike?: any): Promise<MediaFileEntity[]>;
     create(entity: Omit<MediaFileInsert, 'mediaId' | 'createdAt' | 'deletedAt' | 'version'>, tx?: Tx): Promise<{
         mediaId: string;
