@@ -7,14 +7,15 @@ networks:
 services:
   profile-service:
     build:
-      context: ../
+      context: ..
       dockerfile: ProfileService/Dockerfile
     image: profile-service:local
     env_file:
       - .env
     ports:
-      - "3002:3002"
+      - "3002:3000"
     networks:
       - web
     mem_limit: 350m
     cpus: "1.0"
+    restart: on-failure

@@ -1,4 +1,5 @@
-import {IsArray, IsDateString, IsOptional, IsString, MaxLength} from "class-validator";
+import { Transform } from "class-transformer";
+import { IsArray, IsDateString, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class UpdateProfileRequest {
     @IsOptional()
@@ -17,6 +18,9 @@ export class UpdateProfileRequest {
     bio?: string;
 
     @IsOptional()
+    @Transform(({ value }) =>
+        value === "" || value === null ? undefined : value,
+    )
     @IsDateString()
     birthday?: string;
 

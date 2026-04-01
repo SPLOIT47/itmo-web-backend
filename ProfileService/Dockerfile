@@ -6,7 +6,7 @@ COPY package*.json ./
 COPY ProfileService/package*.json ./ProfileService/
 COPY packages/contracts/package*.json ./packages/contracts/
 
-RUN npm ci
+RUN npm ci --fetch-retries=10 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
 COPY ProfileService ./ProfileService
 COPY packages/contracts ./packages/contracts
@@ -26,7 +26,7 @@ COPY package*.json ./
 COPY ProfileService/package*.json ./ProfileService/
 COPY packages/contracts/package*.json ./packages/contracts/
 
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --fetch-retries=10 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000
 
 COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=builder /app/ProfileService/dist ./ProfileService/dist

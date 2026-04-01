@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Patch, Post, Query} from "@nestjs/common";
+import {Body, Controller, Delete, Get, Param, Patch, Post, Query, HttpCode, HttpStatus} from "@nestjs/common";
 import {ApiTags} from "@nestjs/swagger";
 import {ProfileResponse} from "../payload/response/ProfileResponse";
 import {SearchProfilesResponse} from "../payload/response/SearchProfileResponse";
@@ -39,5 +39,11 @@ export class ProfileController {
     @Post("batch")
     async batch(@Body() batch: BatchProfilesRequest): Promise<BatchProfilesResponse> {
         return await this.service.batch(batch);
+    }
+
+    @Delete("me")
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteMe(@Id() id: string): Promise<void> {
+        await this.service.deleteMe(id);
     }
 }

@@ -75,4 +75,8 @@ export class ProfileService {
 
         return toProfileResponse(updated);
     }
+
+    async deleteMe(userId: string): Promise<void> {
+        await this.repository.delete(userId);
+    }
 }

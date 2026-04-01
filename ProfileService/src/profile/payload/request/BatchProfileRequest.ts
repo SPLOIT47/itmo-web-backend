@@ -1,9 +1,8 @@
-import { IsArray, ArrayNotEmpty, IsUUID } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsUUID } from "class-validator";
 
 export class BatchProfilesRequest {
-
     @IsArray()
     @ArrayNotEmpty()
-    @IsUUID()
+    @IsUUID("all", { each: true })
     ids: string[];
 }
