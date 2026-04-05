@@ -137,8 +137,14 @@ let ApplySocialEventUseCase = ApplySocialEventUseCase_1 = class ApplySocialEvent
                 const payload = {
                     text: row.text,
                     media: row.media ?? [],
-                    likes: [],
-                    comments: [],
+                    likes: row.likes ?? [],
+                    comments: (row.comments ?? []).map((c) => ({
+                        id: c.id,
+                        authorId: c.authorId,
+                        text: c.text,
+                        createdAt: c.createdAt,
+                        updatedAt: c.updatedAt,
+                    })),
                 };
                 items.push({
                     ownerUserId: p.userId,

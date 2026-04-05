@@ -169,6 +169,14 @@ export class ApplySocialEventUseCase {
             text: string;
             media: string[];
             createdAt: string;
+            likes?: string[];
+            comments?: Array<{
+                id: string;
+                authorId: string;
+                text: string;
+                createdAt: string;
+                updatedAt: string;
+            }>;
         }>;
 
         if (!Array.isArray(posts) || posts.length === 0) {
@@ -195,8 +203,14 @@ export class ApplySocialEventUseCase {
                 const payload: FeedItemPayload = {
                     text: row.text,
                     media: row.media ?? [],
-                    likes: [],
-                    comments: [],
+                    likes: row.likes ?? [],
+                    comments: (row.comments ?? []).map((c) => ({
+                        id: c.id,
+                        authorId: c.authorId,
+                        text: c.text,
+                        createdAt: c.createdAt,
+                        updatedAt: c.updatedAt,
+                    })),
                 };
                 items.push({
                     ownerUserId: p.userId,
