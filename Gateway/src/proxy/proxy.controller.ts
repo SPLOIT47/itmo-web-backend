@@ -192,14 +192,6 @@ export class ProxyController {
     );
 
     let responseData = result.data;
-    if (
-      responseData &&
-      typeof responseData === "object" &&
-      "accessToken" in responseData &&
-      (fullPath === "/api/auth/login" || fullPath === "/api/auth/register")
-    ) {
-      responseData = { ...responseData, token: (responseData as { accessToken: string }).accessToken };
-    }
 
     if (
       result.status === 200 &&

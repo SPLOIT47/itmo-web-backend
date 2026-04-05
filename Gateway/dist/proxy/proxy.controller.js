@@ -106,12 +106,6 @@ let ProxyController = ProxyController_1 = class ProxyController {
         const result = await this.proxy.forward(req.method, fullPath, req.headers, body, query, req.userId, isMultipart ? req : undefined);
         this.log.log(`outgoing ${req.method} ${fullPath} status=${result.status} ct=${result.headers["content-type"] ?? ""}`);
         let responseData = result.data;
-        if (responseData &&
-            typeof responseData === "object" &&
-            "accessToken" in responseData &&
-            (fullPath === "/api/auth/login" || fullPath === "/api/auth/register")) {
-            responseData = { ...responseData, token: responseData.accessToken };
-        }
         if (result.status === 200 &&
             responseData !== undefined &&
             (0, profile_enrichment_1.shouldEnrichProfilePayload)(fullPath, req.method)) {
