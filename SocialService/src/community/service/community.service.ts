@@ -78,8 +78,8 @@ export class CommunityService {
     return community;
   }
 
-  async search(q?: string) {
-    return this.repo.search(this.db, q);
+  async search(q?: string, limit = 20, offset = 0) {
+    return this.repo.search(this.db, q, limit, offset);
   }
 
   async join(userId: string, communityId: string) {

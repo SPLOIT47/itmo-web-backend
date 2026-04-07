@@ -20,7 +20,7 @@ export class CommunityController {
   @Get('search')
   @ApiOperation({ summary: 'Search communities' })
   search(@Query() query: SearchCommunityQuery) {
-    return this.service.search(query.q);
+    return this.service.search(query.q, query.limit ?? 20, query.offset ?? 0);
   }
 
   @Get('me')

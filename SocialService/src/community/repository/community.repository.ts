@@ -108,9 +108,14 @@ export class CommunityRepository {
     return rows.map((r: any) => r.c);
   }
 
-  async search(dbLike: any, q?: string, limit = 20) {
+  async search(dbLike: any, q?: string, limit = 20, offset = 0) {
     if (!q || q.trim().length === 0) {
-      return dbLike.select().from(schema.communities).where(isNull(schema.communities.deletedAt)).limit(limit);
+      return dbLike
+        .select()
+        .from(schema.communities)
+        .where(isNull(schema.communities.deletedAt))
+        .limit(limit)
+        .offset(offset);
     }
     const pattern = `%${q}%`;
     return dbLike
@@ -122,7 +127,8 @@ export class CommunityRepository {
           or(ilike(schema.communities.name, pattern), ilike(schema.communities.description, pattern)),
         ),
       )
-      .limit(limit);
+      .limit(limit)
+      .offset(offset);
   }
 }
 
