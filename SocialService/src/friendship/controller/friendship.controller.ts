@@ -44,12 +44,6 @@ export class FriendshipController {
     return this.service.listMyFriends(userId);
   }
 
-  @Get('friends/count/:userId')
-  @ApiOperation({ summary: 'Number of friends for a user' })
-  friendCount(@Param('userId') userId: string) {
-    return this.service.countFriendsForUser(userId);
-  }
-
   @Get('friends/requests/incoming')
   @ApiOperation({ summary: 'Incoming requests' })
   incoming(@Id() userId: string) {

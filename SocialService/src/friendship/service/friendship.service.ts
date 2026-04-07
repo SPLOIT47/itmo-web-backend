@@ -142,11 +142,6 @@ export class FriendshipService {
     return { friends };
   }
 
-  async countFriendsForUser(userId: string) {
-    const count = await this.repo.countFriends(this.db, userId);
-    return { count };
-  }
-
   async listIncoming(userId: string) {
     return this.repo.listIncoming(this.db, userId);
   }
@@ -187,20 +182,24 @@ export class FriendshipService {
   }
 
   async getRelation(userId: string, targetUserId: string) {
-    if (userId === targetUserId) return { relation: 'self' as const };
+    const friendCount = await this.repo.countFriends(this.db, targetUserId);
+
+    if (userId === targetUserId) {
+      return { relation: 'self' as const, friendCount };
+    }
 
     const friendship = await this.db.transaction(async (tx: any) => this.repo.findFriendshipBetween(tx, userId, targetUserId));
-    if (friendship) return { relation: 'friends' as const };
+    if (friendship) return { relation: 'friends' as const, friendCount };
 
     const pending = await this.db.transaction(async (tx: any) =>
       this.repo.findPendingRequestBetween(tx, userId, targetUserId),
     );
     if (pending) {
-      if (pending.requesterUserId === userId) return { relation: 'outgoing' as const };
-      return { relation: 'incoming' as const };
+      if (pending.requesterUserId === userId) return { relation: 'outgoing' as const, friendCount };
+      return { relation: 'incoming' as const, friendCount };
     }
 
-    return { relation: 'none' as const };
+    return { relation: 'none' as const, friendCount };
   }
 }
 
