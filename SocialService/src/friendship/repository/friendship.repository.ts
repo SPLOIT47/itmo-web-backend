@@ -145,6 +145,11 @@ export class FriendshipRepository {
     return rows.map((f) => (f.userA === userId ? f.userB : f.userA));
   }
 
+  async countFriends(db: Database, userId: string): Promise<number> {
+    const friends = await this.listFriends(db, userId);
+    return friends.length;
+  }
+
   async deleteFriendRequestsByUser(tx: Tx, userId: string): Promise<void> {
     await tx
       .delete(schema.friendRequests)

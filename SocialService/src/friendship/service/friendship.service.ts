@@ -142,6 +142,11 @@ export class FriendshipService {
     return { friends };
   }
 
+  async countFriendsForUser(userId: string) {
+    const count = await this.repo.countFriends(this.db, userId);
+    return { count };
+  }
+
   async listIncoming(userId: string) {
     return this.repo.listIncoming(this.db, userId);
   }

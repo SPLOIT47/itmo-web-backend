@@ -11,12 +11,20 @@ COPY Gateway ./Gateway
 COPY packages/contracts ./packages/contracts
 
 WORKDIR /app/Gateway
+ARG GATEWAY_BUILD_REF=unknown
+ARG GATEWAY_BUILD_TIME=unknown
+ENV GATEWAY_BUILD_REF=$GATEWAY_BUILD_REF
+ENV GATEWAY_BUILD_TIME=$GATEWAY_BUILD_TIME
 RUN npm run build
 
 FROM node:20-alpine
 
 WORKDIR /app
 ENV NODE_ENV=production
+ARG GATEWAY_BUILD_REF=unknown
+ARG GATEWAY_BUILD_TIME=unknown
+ENV GATEWAY_BUILD_REF=$GATEWAY_BUILD_REF
+ENV GATEWAY_BUILD_TIME=$GATEWAY_BUILD_TIME
 
 COPY package*.json ./
 COPY Gateway/package*.json ./Gateway/

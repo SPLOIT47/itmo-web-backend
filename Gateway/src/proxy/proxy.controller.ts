@@ -65,6 +65,15 @@ export class ProxyController {
       `incoming ${req.method} ${fullPath}${query ? `?${query}` : ""} hasAuth=${!!req.headers.authorization}`,
     );
 
+    if (req.method === "GET" && fullPath === "/api/version") {
+      res.status(200).json({
+        service: "gateway",
+        ref: process.env.GATEWAY_BUILD_REF ?? "dev",
+        builtAt: process.env.GATEWAY_BUILD_TIME ?? null,
+      });
+      return;
+    }
+
     if (needsAuth(fullPath)) {
       const authHeader = req.headers.authorization;
       const token = authHeader?.startsWith("Bearer ")
